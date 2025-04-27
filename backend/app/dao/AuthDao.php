@@ -34,7 +34,7 @@ public function get_user_by_email($email){
     $stmt = $this->conn->prepare ($query);
     $stmt->bindParam(':email', $email);
     $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
 // public function get_user_by_email_or_username($value) {

@@ -19,7 +19,7 @@ $(document).ready(function() {
         }
 
         $.ajax({
-            url: 'http://localhost/BalkanFreelance/backend/auth/register', // adjust URL if needed
+            url: 'http://localhost/BalkanFreelance/backend/auth/register', 
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({
@@ -32,7 +32,7 @@ $(document).ready(function() {
             success: function(response) {
                 alert('Registration successful!');
                 console.log(response);
-                window.location.href = 'login.html'; // redirect after successful registration
+                window.location.href = 'login.html'; 
             },
             error: function(xhr, status, error) {
                 alert('Error: ' + xhr.responseText);

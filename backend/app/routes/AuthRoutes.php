@@ -13,9 +13,9 @@ Flight::route('POST /auth/login', function() {
 
     $user = Flight::get('auth_service')->get_user_by_email($payload['email']);
 
-    if (!$user || !Utils::verify_my_password($payload['password'], $user['password'])) {
-        Flight::halt(401, "Invalid email or password");
-    }
+     if (!$user || !Utils::verify_my_password($payload['password'], $user['password'])) {
+         Flight::halt(401, "Invalid email or password");
+     }
 
     unset($user['password']); 
     $jwt_payload = [
