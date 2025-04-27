@@ -3,10 +3,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register</title>
   
-    <!-- Bootstrap CSS -->
 
   
-    <!-- Your custom styles -->
     <link rel="stylesheet" href="../css/registration.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
@@ -29,64 +27,58 @@
             <div class="card-body p-5">
               <h2 class="text-uppercase text-center mb-5">Create an account</h2>
 
-              <form>
-
-                <div data-mdb-input-init class="form-outline mb-4">
-                  <input type="text" id="form3Example1cg" class="form-control form-control-lg" />
-                  <label class="form-label" for="form3Example1cg">First Name</label>
-                </div>
-
-                <div data-mdb-input-init class="form-outline mb-4">
-                    <input type="text" id="form3Example1cg" class="form-control form-control-lg" />
-                    <label class="form-label" for="form3Example2cg">Last Name</label>
-                  </div>
-
-                <div data-mdb-input-init class="form-outline mb-4">
-                  <input type="email" id="form3Example3cg" class="form-control form-control-lg" />
-                  <label class="form-label" for="form3Example3cg">Your Email</label>
-                </div>
-
-                <div data-mdb-input-init class="form-outline mb-4">
-                  <input type="password" id="form3Example4cg" class="form-control form-control-lg" />
-                  <label class="form-label" for="form3Example4cg">Password</label>
-                </div>
-
-                <div data-mdb-input-init class="form-outline mb-4">
-                  <input type="password" id="form3Example4cdg" class="form-control form-control-lg" />
-                  <label class="form-label" for="form3Example4cdg">Repeat your password</label>
-                </div>
+              <form id="registerForm">
 
                 <div class="form-outline mb-4">
-                    <select class="form-select form-select-lg" id="countrySelect" required>
-                      <option selected disabled value="">Select your country</option>
-                      <option value="Bosnia and Herzegovina">Bosnia and Herzegovina</option>
-                      <option value="Croatia">Croatia</option>
-                      <option value="Serbia">Serbia</option>
-                      <option value="Montenegro">Montenegro</option>
-                      <option value="Albania">Albania</option>
-                      <option value="Kosovo">Kosovo</option>
-                      <option value="North Macedonia">North Macedonia</option>
-                      <option value="Slovenia">Slovenia</option>
-                    </select>
-                    <!-- <label class="form-label mt-2" for="countrySelect">Country</label> -->
-                  </div>
-
-                <div class="form-check d-flex justify-content-center mb-5">
-                  <input class="form-check-input me-2" type="checkbox" value="" id="form2Example3cg" />
-                  <label class="form-check-label" for="form2Example3g">
-                    I agree all statements in <a href="#!" class="text-body"><u>Terms of service</u></a>
-                  </label>
+                  <input type="text" id="firstName" name="first_name" class="form-control form-control-lg" />
+                  <label class="form-label" for="firstName">First Name</label>
                 </div>
-
+              
+                <div class="form-outline mb-4">
+                  <input type="text" id="lastName" name="last_name" class="form-control form-control-lg" />
+                  <label class="form-label" for="lastName">Last Name</label>
+                </div>
+              
+                <div class="form-outline mb-4">
+                  <input type="email" id="email" name="email" class="form-control form-control-lg" />
+                  <label class="form-label" for="email">Your Email</label>
+                </div>
+              
+                <div class="form-outline mb-4">
+                  <input type="password" id="password" name="password" class="form-control form-control-lg" />
+                  <label class="form-label" for="password">Password</label>
+                </div>
+              
+                <div class="form-outline mb-4">
+                  <input type="password" id="repeatPassword" name="repeat_password" class="form-control form-control-lg" />
+                  <label class="form-label" for="repeatPassword">Repeat your password</label>
+                </div>
+              
+                <div class="form-outline mb-4">
+                  <select class="form-select form-select-lg" id="countrySelect" required>
+                    <option selected disabled value="">Select your country</option>
+                    <option value="1">Bosnia and Herzegovina</option>
+                    <option value="2">Croatia</option>
+                    <option value="3">Serbia</option>
+                    <option value="4">Montenegro</option>
+                    <option value="5">Albania</option>
+                    <option value="6">Kosovo</option>
+                    <option value="7">North Macedonia</option>
+                    <option value="8">Slovenia</option>
+                  </select>
+                </div>
+              
                 <div class="d-flex justify-content-center">
-                  <button  type="button" data-mdb-button-init
-                    data-mdb-ripple-init class="btn btn-success btn-block btn-lg gradient-custom-4 text-body">Register</button>
+                  <button type="button" id="registerBtn" class="btn btn-success btn-block btn-lg gradient-custom-4 text-body">
+                    Register
+                  </button>
                 </div>
 
-                <p class="text-center text-muted mt-5 mb-0">Have already an account? <a href="login.html"
-                    class="fw-bold text-body"><u>Login here</u></a></p>
-
+                <p class="text-center text-muted mt-5 mb-0">Already have an account? <a href="login.html"
+                  class="fw-bold text-body"><u>Login here</u></a></p>
+              
               </form>
+              
 
             </div>
           </div>
@@ -100,4 +92,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.4.2/mdb.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="../services/registration.js"></script>
 </body>  

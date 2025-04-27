@@ -1,79 +1,93 @@
 <?php
-
-require_once __DIR__ . '/../services/AuthService.class.php';
-
-
+require_once __DIR__ . '/../services/AuthService.php';
+require_once __DIR__ . '/../Utils.php';
 
 Flight::set('auth_service', new AuthService());
 
+Flight::route('POST /auth/login', function() {
+    $payload = Flight::request()->data->getData();
 
-
-    Flight::route('POST /auth/login', function() {
-
-        //$payload = $_REQUEST;
-        $payload = Flight::request()->data->getData();    
-        
-        
-         $user = Flight::get('auth_service')->get_user_by_email($payload['email']);
-        //print_r("User is: ",$user); 
-        //   print_r( $payload['password'] ."\n");
-        //   print_r( $user['password']);
-          //die;
-       
-         if(!$user || !password_verify($payload['password'], $user['password']))
-
-            Flight::halt(401, "Invalid email or password, and user is: ",$user);
-            
-        
-        unset($user['password']);
-
-        $jwt_payload = [
-            'user' => $user,
-            'iat' => time(),
-            // If this parameter is not set, JWT will be valid for life. This is not a good approach
-            'exp' => time() + (60 * 60 * 24) // valid for day
-        ];
-
-        
-
-        Flight::json(
-            array_merge($user)
-        );
-
-        
-        });
-
-
-
-Flight::route('POST /auth/register', function() {
-    $data = Flight::request()->data;
-
-    // Validation: fullName, username, email, password, phoneNumber
-    // Perform same checks as in Controller (lengths, format, regex, etc.)
-    
-    // Check if user already exists
-    $existingUser = Flight::get('auth_service')->get_user_by_email_or_username_combined($data->email, $data->username);
-    if ($existingUser) {
-        Flight::halt(400, "Email or username already in use");
+    if (empty($payload['email']) || empty($payload['password'])) {
+        Flight::halt(400, "Email and password are required");
     }
 
-    // Optional: password breach check (like you did with Utils::check_if_password_breached)
-    
-    // Hash password
-    $data->password = password_hash($data->password, PASSWORD_DEFAULT);
+    $user = Flight::get('auth_service')->get_user_by_email($payload['email']);
 
-    // Optional: generate OTP secret if you want to keep MFA
+    if (!$user || !Utils::verify_my_password($payload['password'], $user['password'])) {
+        Flight::halt(401, "Invalid email or password");
+    }
 
-    // Save to DB
+    unset($user['password']); 
+    $jwt_payload = [
+        'user' => $user,
+        'iat' => time(),
+        'exp' => time() + (60 * 60 * 24) // 1 day valid
+    ];
+
+
+    Flight::json([
+        'message' => 'Login successful',
+        'user' => $user,
+    ]);
+});
+
+Flight::route('POST /auth/register', function() {
+    $data = Flight::request()->data->getData();
+
+    $required_fields = ['first_name','last_name', 'email', 'password', 'country_id'];
+    foreach ($required_fields as $field) {
+        if (empty($data[$field])) {
+            Flight::halt(400, "Missing field: $field");
+        }
+    }
+
+    if (mb_strlen($data['first_name']) <= 1) {
+        Flight::halt(400, "Please provide a longer first name.");
+    }
+
+    if (mb_strlen($data['last_name']) <= 1) {
+        Flight::halt(400, "Please provide a longer last name.");
+    }
+
+    if (!ctype_alpha($data['first_name'])) {
+        Flight::halt(400, "First name can only contain letters.");
+    }
+
+    if (!ctype_alpha($data['last_name'])) {
+        Flight::halt(400, "Last name can only contain letters.");
+    }
+
+    if (mb_strlen($data['password']) < 8) {
+        Flight::halt(400, "Password must have at least 8 characters.");
+    }
+
+    if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+        Flight::halt(400, "Invalid email format.");
+    }
+
+    if (Flight::get('auth_service')->get_user_by_email($data['email']) ) { #||Flight::get('auth_service')->get_user_by_email_or_username($data['username'])
+        Flight::halt(400, "Email already in use"); #or "Username already in use"
+    }   
+
+    $breached = Utils::check_if_password_breached($data['password']);
+    if ($breached['breached']) {
+        Flight::halt(400, $breached['message']);
+    }
+
+    // if (Utils::check_if_password_breached($data['password'])) {
+    //     Flight::halt(400, "This password has been breached before. Please choose a stronger password.");
+    // }
+
+   
+
+    $data['password'] = Utils::hash_my_password($data['password']);
+
     $newUser = Flight::get('auth_service')->add_user($data);
 
-    // Return response
+    unset($newUser['password']); 
+
     Flight::json([
         'message' => 'Registration successful',
-        'user' => [
-            'fullName' => $newUser['fullName'],
-            'email' => $newUser['email'],
-            'username' => $newUser['username']
-        ]
+        'user' => $newUser
     ]);
 });
