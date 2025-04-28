@@ -10,6 +10,7 @@ $(document).ready(function() {
 
         $.ajax({
             url: "http://localhost/BalkanFreelance/backend/auth/login", 
+            type: "POST",
             contentType: "application/json",
             data: JSON.stringify({
                 email: email,
