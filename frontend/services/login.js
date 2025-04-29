@@ -1,3 +1,4 @@
+
 $(document).ready(function() {
     $("#loginBtn").click(function() {
         var email = $("#email").val().trim();
@@ -17,8 +18,12 @@ $(document).ready(function() {
                 password: password
             }),
             success: function(response) {
-                alert(response.message); // "Login successful"
-                window.location.href = "index.html"; 
+                //alert(response.message); // "Login successful"
+                console.log("Response is: ",response);
+                Utils.set_to_localstorage("user", response);
+                //Utils.set_to_localstorage("user", response.user);
+                Utils.set_to_localstorage("jwt", response.token);
+                window.location.href = "../pages/index.html"; 
             },
             error: function(xhr) {
                 alert(xhr.responseText); // show backend error ("Invalid email or password")
@@ -26,3 +31,17 @@ $(document).ready(function() {
         });
     });
 });
+
+
+var Utils = {
+    set_to_localstorage: function(key, value) {
+        window.localStorage.setItem(key, JSON.stringify(value));
+      },
+      get_from_localstorage: function(key) {
+        return JSON.parse(window.localStorage.getItem(key));
+      },
+      logout: function() {
+        window.localStorage.clear();
+        window.location = "login";
+      }
+    }

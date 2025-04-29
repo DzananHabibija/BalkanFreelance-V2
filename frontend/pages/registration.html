@@ -74,7 +74,7 @@
                   </button>
                 </div>
 
-                <p class="text-center text-muted mt-5 mb-0">Already have an account? <a href="login.html"
+                <p class="text-center text-muted mt-5 mb-0">Already have an account? <a href="../login/index.html"
                   class="fw-bold text-body"><u>Login here</u></a></p>
               
               </form>
@@ -93,5 +93,14 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="../services/ajaxsetup.js"></script>
 <script src="../services/registration.js"></script>
+<script src="../utils/utils.js"></script>
+
+<script>
+  if (Utils.get_from_localstorage("jwt")) {
+    alert("You are already logged in.");
+    window.location.href = "../pages/index.html"; // Redirect to homepage or wherever you want
+  }
+</script>
 </body>  

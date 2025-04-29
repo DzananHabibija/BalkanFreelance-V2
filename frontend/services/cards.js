@@ -29,12 +29,30 @@ $(document).ready(function() {
                             
             });
 
+        
+            // Search functionality
+            $(".search-input").on("input", function() {
+                const searchText = $(this).val().toLowerCase();
+
+                $(".gigsContainer .card").each(function() {
+                    const title = $(this).find(".card-title").text().toLowerCase();
+                    const description = $(this).find(".card-text").first().text().toLowerCase(); // Only description!
+
+                    if (title.includes(searchText) || description.includes(searchText)) {
+                        $(this).parent().show(); // Show the card's column
+                    } else {
+                        $(this).parent().hide(); // Hide the card's column
+                    }
+                });
+            });
+
         },
         error : function(xhr, status, error) {
             console.error("Error fetching gigs:", error);
             alert("Failed to load gigs. Please try again later.");
         }
     })
+
 
 
 

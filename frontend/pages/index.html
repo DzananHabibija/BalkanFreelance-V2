@@ -27,7 +27,7 @@
                   <button class="btn btn-outline-success me-2" type="button">Create Gig</button>
                 </div>
                 <div class="navbar-nav ms-auto">
-                  <a class="nav-link" href="login.html">Log out</a>
+                  <button class="nav-link" onclick="Utils.logout()">Logout</button>
                 </div>
               </div>
               
@@ -49,5 +49,24 @@
     </body>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
+    <script src="../services/ajaxsetup.js"></script>
+
+
     <script src="../services/cards.js"></script>
+
+    <script src="../utils/utils.js"></script>
+    <script>
+        // Check JWT on page load
+        $(document).ready(function() {
+            const token = Utils.get_from_localstorage("jwt");
+            if (!token) {
+                alert("You must log in first.");
+                window.location.href = "../login/index.html"; // or wherever login page is
+            }
+
+            // Optional: You can also decode/validate the JWT here (or via backend ping)
+            // For now, you just check existence
+        });
+    </script>
+
 </html>

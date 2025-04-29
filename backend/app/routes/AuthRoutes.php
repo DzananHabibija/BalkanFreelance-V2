@@ -1,6 +1,10 @@
 <?php
 require_once __DIR__ . '/../services/AuthService.php';
 require_once __DIR__ . '/../Utils.php';
+require_once __DIR__ . '/../../config/config.php';
+
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 
 Flight::set('auth_service', new AuthService());
 
@@ -24,11 +28,23 @@ Flight::route('POST /auth/login', function() {
         'exp' => time() + (60 * 60 * 24) // 1 day valid
     ];
 
+    $token = JWT::encode(
+        $jwt_payload,
+        JWT_SECRET,
+        'HS256'
+    );
 
-    Flight::json([
-        'message' => 'Login successful',
-        'user' => $user,
-    ]);
+
+    // Flight::json([
+    //     'message' => 'Login successful',
+    //     'user' => $user,
+    //     'token' => $token
+    // ]);
+
+    Flight::json(
+        array_merge($user, ['token' => $token])
+    );
+
 });
 
 Flight::route('POST /auth/register', function() {
@@ -90,4 +106,23 @@ Flight::route('POST /auth/register', function() {
         'message' => 'Registration successful',
         'user' => $newUser
     ]);
+});
+
+
+Flight::route('POST /auth/logout', function(){
+    try {
+        $token = Flight::request()->getHeader("Authorization");
+        if(!$token)
+            Flight::halt(401, "Missing authorization header");
+
+        $decoded_token = JWT::decode($token, new Key(JWT_SECRET, 'HS256'));
+
+        Flight::json([
+            'jwt_decoded' => $decoded_token,
+            'user' => $decoded_token->user
+        ]);
+    } catch (\Exception $e) {
+        Flight::halt(401, $e->getMessage());
+    }
+
 });

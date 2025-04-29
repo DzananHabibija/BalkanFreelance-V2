@@ -23,12 +23,12 @@
               <form id="loginForm">
 
                 <div class="form-outline mb-4">
-                  <input type="email" id="email" class="form-control form-control-lg" required />
+                  <input type="email" id="email" name="email" class="form-control form-control-lg" required />
                   <label class="form-label" for="email">Your Email</label>
                 </div>
 
                 <div class="form-outline mb-4">
-                  <input type="password" id="password" class="form-control form-control-lg" required />
+                  <input type="password" id="password" name="password" class="form-control form-control-lg" required />
                   <label class="form-label" for="password">Password</label>
                 </div>
 
@@ -39,7 +39,7 @@
                 </div>
 
                 <p class="text-center text-muted mt-5 mb-0">
-                  Don't have an account? <a href="registration.html" class="fw-bold text-body"><u>Create it here</u></a>
+                  Don't have an account? <a href="../pages/registration.html" class="fw-bold text-body"><u>Create it here</u></a>
                 </p>
 
               </form>
@@ -59,6 +59,16 @@
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
+<script src="../services/ajaxsetup.js"></script>
+
+
 <script src="../services/login.js"></script> 
+
+<script>
+  if (Utils.get_from_localstorage("jwt")) {
+    alert("You are already logged in.");
+    window.location.href = "../pages/index.html"; // Redirect to homepage or wherever you want
+  }
+</script>
 </body>
 </html>
