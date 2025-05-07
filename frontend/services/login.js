@@ -26,7 +26,9 @@ $(document).ready(function() {
                 window.location.href = "../pages/index.html"; 
             },
             error: function(xhr) {
-                alert(xhr.responseText); // show backend error ("Invalid email or password")
+                //alert(xhr.responseText); // show backend error ("Invalid email or password")
+                const errorMsg = xhr.responseText || "An error occurred";
+                $('#loginError').text(errorMsg).show(); // Display error message from backend to the frontend
             }
         });
     });

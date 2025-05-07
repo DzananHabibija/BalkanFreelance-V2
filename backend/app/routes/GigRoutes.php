@@ -27,3 +27,9 @@ Flight::route('DELETE /gigs/delete/@gig_id', function ($id) {
     $gig = $service->delete_gig($id);
     Flight::json(["message" => "You have successfully deleted the gig!"]);
 });
+
+Flight::route('GET /gigs/search/@term', function ($term) {
+    $service = Flight::get("gig_service");
+    $gigs = $service->search_gigs($term);
+    Flight::json($gigs);
+});

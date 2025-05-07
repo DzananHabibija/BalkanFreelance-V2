@@ -34,4 +34,9 @@ Class GigService
         return $this->dao->delete_gig($id);
     }
 
+    public function search_gigs($searchTerm){
+        return $this->dao->search_gigs($searchTerm);
+    }
+    
+
 }

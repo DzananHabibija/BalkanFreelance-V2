@@ -66,6 +66,16 @@ Class GigDao{
             return $stmt->execute();
         }
 
+        public function search_gigs($searchTerm){
+          $query = "SELECT * FROM gigs WHERE title LIKE :search OR description LIKE :search";
+          $stmt = $this->conn->prepare($query);
+          $likeSearch = '%' . $searchTerm . '%';
+          $stmt->bindParam(':search', $likeSearch);
+          $stmt->execute();
+          return $stmt->fetchAll(PDO::FETCH_ASSOC);
+      }
+      
+
         public function insert($table, $entity)
     {
       $query = "INSERT INTO {$table} (";

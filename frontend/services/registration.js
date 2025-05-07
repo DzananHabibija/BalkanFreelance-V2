@@ -32,10 +32,12 @@ $(document).ready(function() {
             success: function(response) {
                 alert('Registration successful!');
                 console.log(response);
-                window.location.href = 'login.html'; 
+                window.location.href = '../login/index.html';
             },
             error: function(xhr, status, error) {
-                alert('Error: ' + xhr.responseText);
+                //alert('Error: ' + xhr.responseText);
+                const errorMsg = xhr.responseText || "Registration failed";
+                $('#registerError').text(errorMsg).show(); //error message from backend to the frontend
             }
         });
     });
