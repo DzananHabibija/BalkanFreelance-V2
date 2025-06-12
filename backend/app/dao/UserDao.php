@@ -117,6 +117,35 @@ class UserDao{
       return $entity;
     }
 
+    public function insert_google_user($table, $entity)
+    {
+        $data = $entity->getData();
+
+        // Only keep allowed fields for BalkanFreelance
+        $allowedFields = [
+            'first_name', 'last_name', 'email', 'password',
+            'country_id', 'profile_image', 'bio', 'balance', 'isAdmin'
+        ];
+
+        // Filter input data to include only allowed fields
+        $filteredData = array_filter(
+            $data,
+            fn($key) => in_array($key, $allowedFields),
+            ARRAY_FILTER_USE_KEY
+        );
+
+        $columns = implode(', ', array_keys($filteredData));
+        $placeholders = ':' . implode(', :', array_keys($filteredData));
+
+        $query = "INSERT INTO {$table} ($columns) VALUES ($placeholders)";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute($filteredData);
+
+        $filteredData['id'] = $this->conn->lastInsertId();
+        return $filteredData;
+    }
+
+
 
 
 

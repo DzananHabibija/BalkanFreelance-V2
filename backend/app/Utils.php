@@ -1,4 +1,13 @@
 <?php
+require_once __DIR__ . '/../vendor/autoload.php';
+
+if (!class_exists(\Google\Client::class)) {
+    die("Google Client class not found!");
+}
+use Google\Client;
+
+
+
 class Utils{
     public static function hash_my_password($password){
 
@@ -33,5 +42,49 @@ class Utils{
             'message' => 'Congrats, this is a safe password!'
         ];
     }
+    }
+
+    public static function getGoogleClient() {
+        $client = new Client();
+        $client->setClientId(GOOGLE_CLIENT_ID);
+        $client->setClientSecret(GOOGLE_CLIENT_SECRET);
+        $client->setRedirectUri(GOOGLE_REDIRECT_URI);
+        $client->addScope('email');
+        $client->addScope('profile');
+        $client->setHttpClient(new \GuzzleHttp\Client([
+            'verify' => false
+        ]));
+
+        return $client;
+    }
+
+
+    public static function validate_reserved_usernames($username) {
+    $url = 'https://raw.githubusercontent.com/shouldbee/reserved-usernames/master/reserved-usernames.txt';
+    
+    $username = strtolower(trim($username));
+
+    $reservedList = file_get_contents($url);
+
+    if ($reservedList === false) {
+        return [
+            'reserved' => false,
+            'message' => 'Could not fetch reserved usernames list.'
+        ];
+    }
+
+    $reservedUsernames = array_map('trim', explode("\n", $reservedList));
+
+    if (in_array($username, $reservedUsernames)) {
+        return [
+            'reserved' => true,
+            'message' => 'Username is reserved and not allowed.'
+        ];
+    }
+
+    return [
+        'reserved' => false,
+        'message' => 'Username is allowed.'
+        ];
     }
 }

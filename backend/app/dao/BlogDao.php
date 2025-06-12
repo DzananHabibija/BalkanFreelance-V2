@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/../../config/config.php';
 
-Class GigDao{
+Class BlogDao{
 
     private $conn;
 
@@ -30,51 +30,32 @@ Class GigDao{
         }
         }
 
-        public function get_gig_by_id($id){
-            $query = "SELECT * FROM gigs WHERE id = :id";
+        public function get_blog_by_id($id){
+            $query = "SELECT * FROM blogs WHERE id = :id";
             $stmt = $this->conn->prepare ($query);
             $stmt->bindParam(':id', $id);
             $stmt->execute();
             return $stmt->fetch(PDO::FETCH_ASSOC);
         }
 
-        public function get_gigs(){
-            $query = "SELECT * FROM gigs";
+        public function get_blogs(){
+            $query = "SELECT * FROM blogs";
             $stmt = $this->conn->prepare ($query);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
-        public function add_gig($gig){
-            return $this->insert('gigs',$gig);
+        public function add_blog($blog){
+            return $this->insert('blogs',$blog);
         }
 
-        public function update_gig($id, $title, $description, $price, $status){
-            $query = "UPDATE gigs SET title = :title, description = :description, price = :price, status = :status WHERE id = :id";
-            $stmt = $this->conn->prepare ($query);
-            $stmt->bindParam(':id', $id);
-            $stmt->bindParam(':title', $title);
-            $stmt->bindParam(':description', $description);
-            $stmt->bindParam(':price', $price);
-            $stmt->bindParam(':status', $status);
-            return $stmt->execute();
-        }
-        public function delete_gig($id){
-            $query = "DELETE FROM gigs WHERE id = :id";
+   
+        public function delete_blog($id){
+            $query = "DELETE FROM blogs WHERE id = :id";
             $stmt = $this->conn->prepare ($query);
             $stmt->bindParam(':id', $id);
             return $stmt->execute();
         }
-
-        public function search_gigs($searchTerm){
-          $query = "SELECT * FROM gigs WHERE title LIKE :search OR description LIKE :search";
-          $stmt = $this->conn->prepare($query);
-          $likeSearch = '%' . $searchTerm . '%';
-          $stmt->bindParam(':search', $likeSearch);
-          $stmt->execute();
-          return $stmt->fetchAll(PDO::FETCH_ASSOC);
-      }
-      
 
         public function insert($table, $entity)
     {

@@ -8,6 +8,22 @@ use Firebase\JWT\Key;
 
 Flight::set('auth_service', new AuthService());
 
+/**
+ * @OA\Post(
+ *     path="/auth/login",
+ *     summary="Log in a user",
+ *     tags={"Authentication"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={"email", "password"},
+ *             @OA\Property(property="email", type="string"),
+ *             @OA\Property(property="password", type="string")
+ *         )
+ *     ),
+ *     @OA\Response(response=200, description="User logged in with JWT")
+ * )
+ */
 Flight::route('POST /auth/login', function() {
     $payload = Flight::request()->data->getData();
 
@@ -21,9 +37,14 @@ Flight::route('POST /auth/login', function() {
          Flight::halt(401, "Invalid email or password");
      }
 
+    $user_id = $user['id'];
+    $user_email = $user['email'];
     unset($user['password']); 
     $jwt_payload = [
-        'user' => $user,
+        'user' => [
+            'id' => $user_id,
+            'email' => $user_email
+        ],
         'iat' => time(),
         'exp' => time() + (60 * 60 * 24) // 1 day valid
     ];
@@ -47,6 +68,26 @@ Flight::route('POST /auth/login', function() {
 
 });
 
+
+/**
+ * @OA\Post(
+ *     path="/auth/register",
+ *     summary="Register a new user",
+ *     tags={"Authentication"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={"first_name", "last_name", "email", "password", "country_id"},
+ *             @OA\Property(property="first_name", type="string"),
+ *             @OA\Property(property="last_name", type="string"),
+ *             @OA\Property(property="email", type="string"),
+ *             @OA\Property(property="password", type="string"),
+ *             @OA\Property(property="country_id", type="integer")
+ *         )
+ *     ),
+ *     @OA\Response(response=200, description="User registered")
+ * )
+ */
 Flight::route('POST /auth/register', function() {
     $data = Flight::request()->data->getData();
 
@@ -108,12 +149,20 @@ Flight::route('POST /auth/register', function() {
     ]);
 });
 
-
+/**
+ * @OA\Post(
+ *     path="/auth/logout",
+ *     summary="Logout and decode JWT",
+ *     tags={"Authentication"},
+ *     @OA\Response(response=200, description="JWT decoded and user info returned"),
+ *     @OA\Response(response=401, description="Unauthorized")
+ * )
+ */
 Flight::route('POST /auth/logout', function(){
     try {
-        $token = Flight::request()->getHeader("Authorization");
+        $token = Flight::request()->getHeader("Authentication");
         if(!$token)
-            Flight::halt(401, "Missing authorization header");
+            Flight::halt(401, "Missing authentication header");
 
         $decoded_token = JWT::decode($token, new Key(JWT_SECRET, 'HS256'));
 
