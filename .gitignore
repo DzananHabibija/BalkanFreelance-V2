@@ -1,3 +1,5 @@
 config/
 vendor
 /backend/vendor
+/backend/public
+

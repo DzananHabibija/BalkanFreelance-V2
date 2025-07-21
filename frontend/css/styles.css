@@ -23,3 +23,15 @@ body{
     transform: translateY(-50%);
     color: #888;
 }
+
+
+.gig-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+  width: 18rem; /* replaces inline style */
+}
+
+.gig-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+}

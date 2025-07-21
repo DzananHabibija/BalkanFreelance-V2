@@ -42,7 +42,14 @@
                   Don't have an account? <a href="../pages/registration.html" class="fw-bold text-body"><u>Create it here</u></a>
                 </p>
 
+                <div id="loginError" class="text-danger text-center mb-3" style="display: none;"></div> <!--added for error handling display -->
+
               </form>
+
+              <div class="text-center mt-4">
+                <button id="googleLoginBtn" class="btn btn-danger btn-lg">Sign in with Google</button>
+              </div>
+
 
             </div>
           </div>
@@ -67,7 +74,7 @@
 <script>
   if (Utils.get_from_localstorage("jwt")) {
     alert("You are already logged in.");
-    window.location.href = "../pages/index.html"; // Redirect to homepage or wherever you want
+    window.location.href = "../pages/home.html"; // Redirect to homepage or wherever you want
   }
 </script>
 </body>

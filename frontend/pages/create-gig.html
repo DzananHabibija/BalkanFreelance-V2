@@ -1,0 +1,19 @@
+<form id="createGigForm" class="mt-4">
+  <input type="text" class="form-control" id="title" placeholder="Gig Title" required>
+
+  <textarea class="form-control mt-2" id="description" placeholder="Short Description" required></textarea>
+
+  <select id="category" class="form-select mt-2" required>
+    <option value="">Choose Category</option>
+  </select>
+
+  <input type="text" class="form-control mt-2" id="tags" placeholder="Tags (comma-separated, e.g., HTML,CSS,JS)">
+
+  <textarea class="form-control mt-2" id="content" placeholder="Full gig content in Markdown" rows="10" required></textarea>
+
+  <input type="number" class="form-control mt-2" id="price" placeholder="Price" required>
+
+  <button type="submit" class="btn btn-primary mt-3">Create Gig</button>
+</form>
+
+<script src="services/create-gig.js"></script>

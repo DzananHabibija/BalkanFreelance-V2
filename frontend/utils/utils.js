@@ -7,6 +7,6 @@ var Utils = {
       },
       logout: function() {
         window.localStorage.clear();
-        window.location = "../login/index.html";
+        window.location = "login/index.html";
       }
 }

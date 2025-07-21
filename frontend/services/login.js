@@ -23,12 +23,31 @@ $(document).ready(function() {
                 Utils.set_to_localstorage("user", response);
                 //Utils.set_to_localstorage("user", response.user);
                 Utils.set_to_localstorage("jwt", response.token);
-                window.location.href = "../pages/index.html"; 
+                window.location = "../#home"; 
             },
             error: function(xhr) {
-                alert(xhr.responseText); // show backend error ("Invalid email or password")
+                //alert(xhr.responseText); // show backend error ("Invalid email or password")
+                const errorMsg = xhr.responseText || "An error occurred";
+                $('#loginError').text(errorMsg).show(); // Display error message from backend to the frontend
             }
         });
+    });
+
+       $('#googleLoginBtn').on('click', function () {
+      $.ajax({
+        url: 'http://localhost/BalkanFreelance/backend/google-login',
+        method: 'GET',
+        success: function (response) {
+          if (response.authUrl) {
+            window.location.href = response.authUrl;
+          } else {
+            alert("Unable to redirect to Google.");
+          }
+        },
+        error: function () {
+          alert("Something went wrong while preparing Google login.");
+        }
+      });
     });
 });
 
@@ -40,8 +59,8 @@ var Utils = {
       get_from_localstorage: function(key) {
         return JSON.parse(window.localStorage.getItem(key));
       },
-      logout: function() {
-        window.localStorage.clear();
-        window.location = "login";
-      }
+      // logout: function() {
+      //   window.localStorage.clear();
+      //   window.location = "/login/index.html";
+      // }
     }

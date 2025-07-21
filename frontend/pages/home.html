@@ -1,0 +1,37 @@
+
+        
+
+        <div class="container mt-5">
+            <h1 class="text-center">Welcome to BalkanFreelance</h1>
+            <p class="text-center">This is a simple homepage.</p>
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                  <div class="search-container">
+                    <input type="text" id="gigSearchInput" class="form-control search-input" placeholder="Search...">
+                    <i class="fas fa-search search-icon"></i>
+                  </div>
+                </div>
+              </div>
+            <div class="row gigsContainer"></div>
+
+
+
+
+    <script>
+      // Check JWT on page load
+      $(document).ready(function() {
+          const token = Utils.get_from_localstorage("jwt");
+          if (!token) {
+              alert("You must log in first.");
+              window.location = "login/index.html"; // or wherever login page is
+          }
+
+          // Optional: You can also decode/validate the JWT here (or via backend ping)
+          // For now, you just check existence
+      });
+  </script>
+
+    <script src="services/cards.js"></script>
+
+    
+
