@@ -1,6 +1,4 @@
 function renderGigs(gigs) {
-
-
     const $gigsContainer = $(".gigsContainer");
     $gigsContainer.empty();
 

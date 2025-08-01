@@ -27,7 +27,6 @@ Flight::route('GET /gigs/@gig_id', function ($id) {
     Flight::json($gig);
 });
 
-
 /**
  * @OA\Post(
  *     path="/gigs/add",
@@ -99,7 +98,6 @@ Flight::route('DELETE /gigs/delete/@gig_id', function ($id) {
     }
 });
 
-
 /**
  * @OA\Get(
  *     path="/gigs/search/{term}",
@@ -122,8 +120,6 @@ Flight::route('GET /gigs/search/@term', function ($term) {
     $gigs = $service->search_gigs($term);
     Flight::json($gigs);
 });
-
-
 
 /**
  * @OA\Post(
