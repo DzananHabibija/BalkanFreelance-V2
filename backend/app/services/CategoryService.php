@@ -30,4 +30,8 @@ class CategoryService
     {
         return $this->dao->delete_category($id);
     }
+
+    public function update_category($data) {
+    return $this->dao->update_category($data);
+}
 }

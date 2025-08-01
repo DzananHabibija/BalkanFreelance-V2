@@ -23,6 +23,8 @@ class UserService
         return $this->dao->get_user_by_email_or_username($value);
     }
 
+
+
     public function get_user_by_email_or_username_combined($email, $username) {
         return $this->dao->get_user_by_email_or_username_combined($email, $username);
     }
@@ -42,6 +44,10 @@ class UserService
 
     public function delete_user($id) {
         return $this->dao->delete_user($id);
+    }
+
+    public function update_user($data) {
+        return $this->dao->update_user($data);
     }
     
     

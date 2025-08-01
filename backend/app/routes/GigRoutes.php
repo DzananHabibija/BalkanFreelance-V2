@@ -90,9 +90,15 @@ Flight::route('GET /gigs', function() {
  */
 Flight::route('DELETE /gigs/delete/@gig_id', function ($id) {
     $service = Flight::get("gig_service");
-    $gig = $service->delete_gig($id);
-    Flight::json(["message" => "You have successfully deleted the gig!"]);
+    $success = $service->delete_gig($id);
+
+    if ($success) {
+        Flight::json(["message" => "You have successfully deleted the gig!"]);
+    } else {
+        Flight::halt(404, "Gig not found.");
+    }
 });
+
 
 /**
  * @OA\Get(
@@ -115,4 +121,33 @@ Flight::route('GET /gigs/search/@term', function ($term) {
     $service = Flight::get("gig_service");
     $gigs = $service->search_gigs($term);
     Flight::json($gigs);
+});
+
+
+
+/**
+ * @OA\Post(
+ *     path="/gigs/update",
+ *     summary="Update a gig",
+ *     tags={"Gigs"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={"id", "title", "description", "price"},
+ *             @OA\Property(property="id", type="integer"),
+ *             @OA\Property(property="title", type="string"),
+ *             @OA\Property(property="description", type="string"),
+ *             @OA\Property(property="tags", type="string"),
+ *             @OA\Property(property="price", type="number"),
+ *             @OA\Property(property="status", type="string", nullable=true)
+ *         )
+ *     ),
+ *     @OA\Response(response=200, description="Gig updated successfully")
+ * )
+ */
+Flight::route('POST /gigs/update', function () {
+    $data = Flight::request()->data->getData();
+    $service = Flight::get("gig_service");
+    $updated = $service->update_gig($data);
+    Flight::json(["message" => "Gig updated", "gig" => $updated]);
 });

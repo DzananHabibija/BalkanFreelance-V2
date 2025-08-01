@@ -49,16 +49,7 @@ Class GigDao{
             return $this->insert('gigs',$gig);
         }
 
-        public function update_gig($id, $title, $description, $price, $status){
-            $query = "UPDATE gigs SET title = :title, description = :description, price = :price, status = :status WHERE id = :id";
-            $stmt = $this->conn->prepare ($query);
-            $stmt->bindParam(':id', $id);
-            $stmt->bindParam(':title', $title);
-            $stmt->bindParam(':description', $description);
-            $stmt->bindParam(':price', $price);
-            $stmt->bindParam(':status', $status);
-            return $stmt->execute();
-        }
+       
         public function delete_gig($id){
             $query = "DELETE FROM gigs WHERE id = :id";
             $stmt = $this->conn->prepare ($query);
@@ -96,5 +87,27 @@ Class GigDao{
       $entity['id'] = $this->conn->lastInsertId();
       return $entity;
     }
+
+    public function update_gig($data) {
+    $sql = "UPDATE gigs SET
+                title = :title,
+                description = :description,
+                tags = :tags,
+                price = :price,
+                status = :status
+            WHERE id = :id";
+    
+    $stmt = $this->conn->prepare($sql);
+    $stmt->execute([
+        ':title' => $data['title'],
+        ':description' => $data['description'],
+        ':tags' => $data['tags'],
+        ':price' => $data['price'],
+        ':status' => $data['status'],
+        ':id' => $data['id']
+    ]);
+
+    return $this->get_gig_by_id($data['id']);
+}
 
 }

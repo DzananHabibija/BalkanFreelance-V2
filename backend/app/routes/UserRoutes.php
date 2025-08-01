@@ -94,6 +94,36 @@ Flight::route('POST /users/add', function() {
     
     });
 
+
+/**
+ * @OA\Post(
+ *     path="/users/update",
+ *     summary="Update user by ID",
+ *     tags={"Users"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={"id", "fullName", "email"},
+ *             @OA\Property(property="id", type="integer"),
+ *             @OA\Property(property="fullName", type="string"),
+ *             @OA\Property(property="email", type="string"),
+ *             @OA\Property(property="countryId", type="integer"),
+ *             @OA\Property(property="bio", type="string"),
+ *             @OA\Property(property="balance", type="number"),
+ *             @OA\Property(property="role", type="string")
+ *         )
+ *     ),
+ *     @OA\Response(response=200, description="User updated successfully")
+ * )
+ */
+Flight::route('POST /users/update', function () {
+    $data = Flight::request()->data->getData();
+    $service = Flight::get("user_service");
+    $updated = $service->update_user($data);
+    Flight::json(["message" => "User updated", "user" => $updated]);
+});
+
+
 /**
  * @OA\Post(
  *     path="/otp/qr-code",

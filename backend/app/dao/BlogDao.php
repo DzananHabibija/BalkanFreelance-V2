@@ -57,6 +57,25 @@ Class BlogDao{
             return $stmt->execute();
         }
 
+
+        public function update_blog($data) {
+    $sql = "UPDATE blogs SET
+                title = :title,
+                content = :content,
+                image_url = :image_url,
+                published_at = :published_at
+            WHERE id = :id";
+    $stmt = $this->conn->prepare($sql);
+    $stmt->execute([
+        ':title' => $data['title'],
+        ':content' => $data['content'],
+        ':image_url' => $data['image_url'],
+        ':published_at' => $data['published_at'],
+        ':id' => $data['id']
+    ]);
+    return $this->get_blog_by_id($data['id']);
+}
+
         public function insert($table, $entity)
     {
       $query = "INSERT INTO {$table} (";

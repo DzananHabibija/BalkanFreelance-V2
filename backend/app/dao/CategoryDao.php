@@ -56,6 +56,16 @@ Class CategoryDao{
             $stmt->bindParam(':id', $id);
             return $stmt->execute();
         }
+
+        public function update_category($data) {
+          $sql = "UPDATE categories SET name = :name WHERE id = :id";
+          $stmt = $this->conn->prepare($sql);
+          $stmt->execute([
+              ':name' => $data['name'],
+              ':id' => $data['id']
+          ]);
+          return $this->get_category_by_id($data['id']);
+          }
   
 
         public function insert($table, $entity)

@@ -36,7 +36,7 @@ class UserDao{
         $stmt = $this->conn->prepare ($query);
         $stmt->bindParam(':id', $id);
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public function get_user_by_email_or_username($value) {
@@ -72,6 +72,31 @@ class UserDao{
       $stmt->execute();
       return $stmt->fetchAll(PDO::FETCH_ASSOC);
   }
+
+  public function update_user($data) {
+    $sql = "UPDATE users SET 
+                first_name = :first_name,
+                last_name = :last_name,
+                email = :email,
+                country_id = :country_id,
+                bio = :bio,
+                balance = :balance,
+                isAdmin = :isAdmin
+            WHERE id = :id";
+    $stmt = $this->conn->prepare($sql);
+    $stmt->execute([
+        ':first_name' => $data['first_name'],
+        ':last_name' => $data['last_name'],
+        ':email' => $data['email'],
+        ':country_id' => $data['country_id'],
+        ':bio' => $data['bio'],
+        ':balance' => $data['balance'],
+        ':isAdmin' => $data['isAdmin'],
+        ':id' => $data['id']
+    ]);
+    return $this->get_user_by_id($data['id']);
+}
+
 
   
 

@@ -35,3 +35,25 @@ body{
   transform: translateY(-5px);
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
 }
+
+
+/* Fix toastr background and text colors being overridden by Bootstrap 5 */
+#toast-container > .toast-success {
+  background-color: #51A351 !important;
+  color: white !important;
+}
+
+#toast-container > .toast-error {
+  background-color: #BD362F !important;
+  color: white !important;
+}
+
+#toast-container > .toast-info {
+  background-color: #2F96B4 !important;
+  color: white !important;
+}
+
+#toast-container > .toast-warning {
+  background-color: #F89406 !important;
+  color: white !important;
+}

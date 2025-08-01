@@ -1,0 +1,192 @@
+<!-- Users Table -->
+<div class="container mt-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+  <h4>User Management</h4>
+  <button class="btn btn-success" id="addUserBtn">Add User</button>
+  </div>
+
+
+  <table id="usersTable" class="table table-striped table-bordered table-hover">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>First Name</th>
+        <th>Last Name</th>
+        <th>Email</th>
+        <th>Country ID</th>
+        <th>Bio</th>
+        <th>Created At</th>
+        <th>Balance</th>
+        <th>Role</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5>Edit User</h5></div>
+      <div class="modal-body">
+        <input type="hidden" id="editUserId">
+        <input type="text" id="editFirstName" class="form-control mb-2" placeholder="First Name">
+        <input type="text" id="editLastName" class="form-control mb-2" placeholder="Last Name">
+        <input type="email" id="editEmail" class="form-control mb-2" placeholder="Email">
+        <input type="number" id="editCountryId" class="form-control mb-2" placeholder="Country ID">
+        <textarea id="editBio" class="form-control mb-2" placeholder="Bio"></textarea>
+        <input type="number" id="editBalance" class="form-control mb-2" placeholder="Balance" step="0.01">
+        <select id="editRole" class="form-control mb-2">
+          <option value="0">User</option>
+          <option value="1">Admin</option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="saveUserChangesBtn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Confirm Delete</h5>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete this user?
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+        <button class="btn btn-danger" id="confirmDeleteBtn">Yes, Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Add New User</h5></div>
+      <div class="modal-body">
+        <div class="mb-3"><label>First Name</label><input type="text" class="form-control" id="addFirstName"></div>
+        <div class="mb-3"><label>Last Name</label><input type="text" class="form-control" id="addLastName"></div>
+        <div class="mb-3"><label>Email</label><input type="email" class="form-control" id="addEmail"></div>
+        <div class="mb-3"><label>Password</label><input type="password" class="form-control" id="addPassword"></div>
+        <div class="mb-3"><label>Country ID</label><input type="number" class="form-control" id="addCountryId"></div>
+        <div class="mb-3"><label>Bio</label><textarea class="form-control" id="addBio"></textarea></div>
+        <div class="mb-3"><label>Balance</label><input type="number" step="0.01" class="form-control" id="addBalance"></div>
+        <div class="mb-3"><label>Role</label>
+          <select class="form-control" id="addRole">
+            <option value="0">User</option>
+            <option value="1">Admin</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" id="createUserBtn">Create</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- <script>
+
+let table;
+let selectedUserId = null;
+
+$(document).ready(function () {
+  table = $('#usersTable').DataTable({
+    ajax: {
+      url: `${API_BASE}/users/`,
+      dataSrc: ''
+    },
+    columns: [
+      { data: 'id' },
+      { data: 'first_name' },
+      { data: 'last_name' },
+      { data: 'email' },
+      { data: 'country_id' },
+      { data: 'bio' },
+      { data: 'created_at' },
+      { data: 'balance' },
+      {
+        data: 'isAdmin',
+        render: val => val == 1 ? 'Admin' : 'User'
+      },
+      {
+        data: null,
+        render: data => `
+          <div class="btn-group btn-group-sm" role="group">
+            <button class="btn btn-warning editUserBtn" data-id="${data.id}">Edit</button>
+            <button class="btn btn-danger deleteUserBtn" data-id="${data.id}">Delete</button>
+          </div>`
+      }
+    ]
+  });
+
+  const editModal = new bootstrap.Modal(document.getElementById('editUserModal'));
+  const deleteModal = new bootstrap.Modal(document.getElementById('deleteUserModal'));
+
+  $('#usersTable tbody').on('click', '.editUserBtn', function () {
+    const data = table.row($(this).parents('tr')).data();
+    $('#editUserId').val(data.id);
+    $('#editFirstName').val(data.first_name);
+    $('#editLastName').val(data.last_name);
+    $('#editEmail').val(data.email);
+    $('#editCountryId').val(data.country_id);
+    $('#editBio').val(data.bio);
+    $('#editBalance').val(data.balance);
+    $('#editRole').val(data.isAdmin);
+    editModal.show();
+  });
+
+  $('#saveUserChangesBtn').click(function () {
+    const updatedUser = {
+      id: $('#editUserId').val(),
+      first_name: $('#editFirstName').val(),
+      last_name: $('#editLastName').val(),
+      email: $('#editEmail').val(),
+      country_id: $('#editCountryId').val(),
+      bio: $('#editBio').val(),
+      balance: $('#editBalance').val(),
+      isAdmin: $('#editRole').val()
+    };
+
+    $.post(`${API_BASE}/users/update`, updatedUser, function () {
+      editModal.hide();
+      table.ajax.reload(null, false);
+      toastr.success('User was edited successfully.');
+    }).fail(() => {
+      toastr.error('Failed to update user.');
+    });
+  });
+
+  $('#usersTable tbody').on('click', '.deleteUserBtn', function () {
+    selectedUserId = $(this).data('id');
+    deleteModal.show();
+  });
+
+  $('#confirmDeleteBtn').click(function () {
+    $.ajax({
+      url: `${API_BASE}/users/delete/${selectedUserId}`,
+      type: 'DELETE',
+      success: function () {
+        deleteModal.hide();
+        table.ajax.reload(null, false);
+        toastr.success('User was successfully deleted.');
+      },
+      error: function () {
+        alert('Failed to delete user.');
+      }
+    });
+  });
+});
+</script> -->

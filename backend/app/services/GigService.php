@@ -26,9 +26,9 @@ Class GigService
         return $this->dao->get_gigs();
     }
 
-    public function update_gig($id, $title, $description, $price, $status){
-        return $this->dao->update_gig($id, $title, $description, $price, $status);
-    }
+    // public function update_gig($id, $title, $description, $price, $status){
+    //     return $this->dao->update_gig($id, $title, $description, $price, $status);
+    // }
 
     public function delete_gig($id){
         return $this->dao->delete_gig($id);
@@ -36,6 +36,10 @@ Class GigService
 
     public function search_gigs($searchTerm){
         return $this->dao->search_gigs($searchTerm);
+    }
+
+    public function update_gig($data){
+        return $this->dao->update_gig($data);
     }
     
 

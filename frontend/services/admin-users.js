@@ -1,0 +1,128 @@
+function initAdminUsers() {
+    console.log("DataTables loaded?", typeof $.fn.dataTable); // should log "function"
+    console.log("DataTables available in admin-users.js?", typeof $.fn.dataTable);
+
+
+
+
+  let usersTable = $('#usersTable').DataTable({
+    ajax: {
+      url: `${API_BASE}/users/`,
+      dataSrc: ''
+    },
+    columns: [
+      { data: 'id' },
+      { data: 'first_name' },
+      { data: 'last_name' },
+      { data: 'email' },
+      { data: 'country_id' },
+      { data: 'bio' },
+      { data: 'created_at' },
+      { data: 'balance' },
+      {
+        data: 'isAdmin',
+        render: val => val == 1 ? 'Admin' : 'User'
+      },
+      {
+        data: null,
+        render: data => `
+          <div class="btn-group btn-group-sm" role="group">
+            <button class="btn btn-warning editUserBtn" data-id="${data.id}">Edit</button>
+            <button class="btn btn-danger deleteUserBtn" data-id="${data.id}">Delete</button>
+          </div>`
+      }
+    ]
+  });
+
+  const editModal = new bootstrap.Modal(document.getElementById('editUserModal'));
+  const deleteModal = new bootstrap.Modal(document.getElementById('deleteUserModal'));
+  let selectedUserId = null;
+
+  $('#usersTable tbody').on('click', '.editUserBtn', function () {
+    const data = usersTable.row($(this).parents('tr')).data();
+    $('#editUserId').val(data.id);
+    $('#editFirstName').val(data.first_name);
+    $('#editLastName').val(data.last_name);
+    $('#editEmail').val(data.email);
+    $('#editCountryId').val(data.country_id);
+    $('#editBio').val(data.bio);
+    $('#editBalance').val(data.balance);
+    $('#editRole').val(data.isAdmin);
+    editModal.show();
+  });
+
+  $('#saveUserChangesBtn').click(function () {
+    const updatedUser = {
+      id: $('#editUserId').val(),
+      first_name: $('#editFirstName').val(),
+      last_name: $('#editLastName').val(),
+      email: $('#editEmail').val(),
+      country_id: $('#editCountryId').val(),
+      bio: $('#editBio').val(),
+      balance: $('#editBalance').val(),
+      isAdmin: $('#editRole').val()
+    };
+
+    $.post(`${API_BASE}/users/update`, updatedUser, function () {
+      editModal.hide();
+      usersTable.ajax.reload(null, false);
+      toastr.success('User was edited successfully.');
+    }).fail(() => {
+      toastr.error('Failed to update user.');
+    });
+  });
+
+  $('#usersTable tbody').on('click', '.deleteUserBtn', function () {
+    selectedUserId = $(this).data('id');
+    deleteModal.show();
+  });
+
+  $('#confirmDeleteBtn').click(function () {
+    $.ajax({
+      url: `${API_BASE}/users/delete/${selectedUserId}`,
+      type: 'DELETE',
+      success: function () {
+        deleteModal.hide();
+        usersTable.ajax.reload(null, false);
+        toastr.success('User was successfully deleted.');
+      },
+      error: function () {
+        alert('Failed to delete user.');
+      }
+    });
+  });
+}
+
+
+
+
+$('#addUserBtn').click(function () {
+  $('#addUserModal').modal('show');
+});
+
+$('#createUserBtn').click(function () {
+  const newUser = {
+    first_name: $('#addFirstName').val(),
+    last_name: $('#addLastName').val(),
+    email: $('#addEmail').val(),
+    password: $('#addPassword').val(),
+    country_id: $('#addCountryId').val(),
+    bio: $('#addBio').val(),
+    balance: $('#addBalance').val(),
+    isAdmin: $('#addRole').val()
+  };
+
+  // Basic validation
+  if (!newUser.first_name || !newUser.last_name || !newUser.email || !newUser.password) {
+    toastr.error('Please fill in all required fields.');
+    return;
+  }
+
+  $.post(`${API_BASE}/users/add`, newUser, function () {
+    $('#addUserModal').modal('hide');
+    $('#usersTable').DataTable().ajax.reload(null, false);
+    toastr.success('User created successfully.');
+  }).fail(() => {
+    toastr.error('Failed to create user.');
+  });
+});

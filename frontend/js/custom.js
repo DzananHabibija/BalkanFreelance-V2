@@ -52,56 +52,12 @@ $(document).ready(function () {
 
   app.route({
   view: 'admin',
-  load: 'admin-dashboard.html',
-  onViewLoad: function () {
-    console.log("✅ Admin view loaded");
+  load: 'admin-dashboard.html' 
+  });
 
-    // Delay to make sure DOM is ready after SPApp injects the view
-    setTimeout(function () {
-      if ($.fn.DataTable.isDataTable('#usersTable')) {
-        $('#usersTable').DataTable().destroy();
-        $('#usersTable').empty();
-      }
-
-      $('#usersTable').DataTable({
-        ajax: {
-          url: 'http://localhost/BalkanFreelance/backend/users', // ✅ YOUR real endpoint
-          dataSrc: function (json) {
-            console.log("✅ /users API response:", json);
-            return json;
-          }
-        },
-       columns: [
-  { data: 'id' },
-  {
-    data: null,
-    render: function (data, type, row) {
-      return (row.first_name || '') + ' ' + (row.last_name || '');
-    }
-  },
-  { data: 'email', render: d => d || '—' },
-  { data: 'country_id', render: d => d || '—' },
-  { data: 'bio', render: d => d || '—' },
-  { data: 'created_at', render: d => d || '—' },
-  { data: 'balance', render: d => d || '0.00' },
-  {
-    data: 'isAdmin',
-    render: d => d == 1 ? 'Admin' : 'User'
-  },
-  {
-    data: null,
-    render: function () {
-      return '<button class="btn btn-sm btn-primary">Edit</button>';
-    }
-  }
-]
-
-
-      });
-    }, 200); // Slight delay to wait for DOM injection (SPApp quirk)
-  }
-});
-
+  //  onEnter: function() {
+  //   $.getScript('js/admin-dashboard.js');
+  //   }
 
   // Run the app
   app.run();

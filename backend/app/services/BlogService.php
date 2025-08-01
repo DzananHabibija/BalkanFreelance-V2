@@ -30,4 +30,13 @@ Class BlogService
         return $this->dao->delete_blog($id);
     }
 
+    public function update_blog($data) {
+    return $this->dao->update_blog($data);
 }
+
+
+
+
+}
+
+

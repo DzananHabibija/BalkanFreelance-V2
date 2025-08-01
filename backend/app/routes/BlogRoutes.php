@@ -106,8 +106,40 @@ Flight::route('GET /blogs', function() {
  * )
  */
 Flight::route('DELETE /blogs/delete/@blog_id', function ($id) {
-    $service = Flight::get("blog_service");
-    $blog = $service->delete_blog($id);
-    Flight::json(["message" => "You have successfully deleted the blog!"]);
+    $success = Flight::get("blog_service")->delete_blog($id);
+    if ($success) {
+        Flight::json(["message" => "You have successfully deleted the blog!"]);
+    } else {
+        Flight::halt(404, "Blog not found.");
+    }
 });
+
+
+
+/**
+ * @OA\Post(
+ *     path="/blogs/update",
+ *     summary="Update a blog post",
+ *     tags={"Blogs"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={"id", "title", "content"},
+ *             @OA\Property(property="id", type="integer"),
+ *             @OA\Property(property="title", type="string"),
+ *             @OA\Property(property="content", type="string"),
+ *             @OA\Property(property="image_url", type="string", nullable=true),
+ *             @OA\Property(property="published_at", type="string", format="date-time", nullable=true)
+ *         )
+ *     ),
+ *     @OA\Response(response=200, description="Blog updated successfully")
+ * )
+ */
+Flight::route('POST /blogs/update', function () {
+    $data = Flight::request()->data->getData();
+    $service = Flight::get("blog_service");
+    $updated = $service->update_blog($data);
+    Flight::json(["message" => "Blog updated", "blog" => $updated]);
+});
+
 

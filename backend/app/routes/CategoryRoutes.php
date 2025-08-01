@@ -74,7 +74,34 @@ Flight::route('GET /categories', function() {
  * )
  */
 Flight::route('DELETE /categories/delete/@category_id', function ($id) {
-    $service = Flight::get("category_service");
-    $category = $service->delete_category($id);
-    Flight::json(["message" => "You have successfully deleted the category!"]);
+    $success = Flight::get("category_service")->delete_category($id);
+    if ($success) {
+        Flight::json(["message" => "You have successfully deleted the category!"]);
+    } else {
+        Flight::halt(404, "Category not found.");
+    }
+});
+
+
+
+/**
+ * @OA\Post(
+ *     path="/categories/update",
+ *     summary="Update a category",
+ *     tags={"Categories"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={"id", "name"},
+ *             @OA\Property(property="id", type="integer"),
+ *             @OA\Property(property="name", type="string")
+ *         )
+ *     ),
+ *     @OA\Response(response=200, description="Category updated")
+ * )
+ */
+Flight::route('POST /categories/update', function () {
+    $payload = Flight::request()->data->getData();
+    $updated = Flight::get("category_service")->update_category($payload);
+    Flight::json(["message" => "Category updated", "category" => $updated]);
 });
