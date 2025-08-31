@@ -20,8 +20,13 @@ function renderGigs(gigs) {
 }
 
 function loadAllGigs() {
+    const user = JSON.parse(localStorage.getItem("user"));
+    const excludeUserId = user?.id;
+
     $.ajax({
-        url: "http://localhost/BalkanFreelance/backend/gigs",
+        url: excludeUserId
+            ? `http://localhost/BalkanFreelance/backend/gigs?excludeUser=${excludeUserId}`
+            : `http://localhost/BalkanFreelance/backend/gigs`,
         type: "GET",
         dataType: "json",
         success: function(data) {
@@ -33,6 +38,7 @@ function loadAllGigs() {
         }
     });
 }
+
 
 $(document).ready(function() {
     loadAllGigs();

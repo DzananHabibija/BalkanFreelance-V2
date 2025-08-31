@@ -119,6 +119,32 @@ class UserDao{
         $stmt->bindParam(':id', $id);
         $stmt->execute();
     }
+
+    public function getById($id) {
+        $stmt = $this->conn->prepare("SELECT id, first_name, last_name, email, bio, profile_image FROM users WHERE id = ?");
+        $stmt->execute([$id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function getGigsByUserId($id) {
+    $stmt = $this->conn->prepare("SELECT id, title, price, status, created_at, user_id FROM gigs WHERE user_id = ?");
+    $stmt->execute([$id]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+
+
+   public function updateBio($id, $bio) {
+      $stmt = $this->conn->prepare("UPDATE users SET bio = ? WHERE id = ?");
+      $stmt->execute([$bio, $id]);
+
+      // Return updated user (optional but useful)
+      $stmt = $this->conn->prepare("SELECT id, first_name, last_name, email, bio FROM users WHERE id = ?");
+      $stmt->execute([$id]);
+      return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+
   
 
     public function insert($table, $entity)

@@ -51,9 +51,27 @@ $(document).ready(function () {
   });
 
   app.route({
+    view: 'user-profile',
+    load: 'user-profile.html' 
+  });
+
+  app.route({
   view: 'admin',
   load: 'admin-dashboard.html' 
   });
+
+  app.route({
+  view: 'single-blog',
+  load: 'single-blog.html',
+  onEnter: function () {
+    // This runs when #single-blog is navigated to,
+    // so we can read ?id=... and load the post.
+      if (window.SingleBlog && typeof SingleBlog.render === 'function') {
+      SingleBlog.render();
+      }
+    }
+  });
+
 
   //  onEnter: function() {
   //   $.getScript('js/admin-dashboard.js');

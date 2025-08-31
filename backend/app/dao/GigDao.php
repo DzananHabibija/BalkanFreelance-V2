@@ -65,6 +65,29 @@ Class GigDao{
           $stmt->execute();
           return $stmt->fetchAll(PDO::FETCH_ASSOC);
       }
+
+      public function getAll($excludeUserId = null) {
+        if ($excludeUserId) {
+            $stmt = $this->conn->prepare("SELECT * FROM gigs WHERE user_id != ?");
+            $stmt->execute([$excludeUserId]);
+        } else {
+            $stmt = $this->conn->prepare("SELECT * FROM gigs");
+            $stmt->execute();
+        }
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+     }
+
+
+     public function updateGig($id, $title, $price, $status) {
+        $stmt = $this->conn->prepare("UPDATE gigs SET title = ?, price = ?, status = ? WHERE id = ?");
+        $stmt->execute([$title, $price, $status, $id]);
+
+        $stmt = $this->conn->prepare("SELECT * FROM gigs WHERE id = ?");
+        $stmt->execute([$id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
       
 
         public function insert($table, $entity)

@@ -37,4 +37,13 @@ Class GigService
     public function update_gig($data){
         return $this->dao->update_gig($data);
     }
+
+    public function getAllGigs($excludeUserId = null) {
+    return $this->dao->getAll($excludeUserId);
+    }
+
+    public function updateGig($id, $title, $price, $status) {
+        return $this->dao->updateGig($id, $title, $price, $status);
+    }
+
 }

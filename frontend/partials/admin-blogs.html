@@ -25,22 +25,13 @@
       <div class="modal-header"><h5 class="modal-title">Edit Blog</h5></div>
       <div class="modal-body">
         <input type="hidden" id="editBlogId">
+        <div class="mb-3"><label>Title</label><input type="text" class="form-control" id="editBlogTitle"></div>
+        <div class="mb-3"><label>Content</label><textarea class="form-control" id="editBlogContent"></textarea></div>
         <div class="mb-3">
-          <label>Title</label>
-          <input type="text" class="form-control" id="editBlogTitle">
+          <label>Image (Upload new to replace)</label>
+          <input type="file" class="form-control" id="editBlogImageFile" accept="image/*">
         </div>
-        <div class="mb-3">
-          <label>Content</label>
-          <textarea class="form-control" id="editBlogContent"></textarea>
-        </div>
-        <div class="mb-3">
-          <label>Image URL</label>
-          <input type="text" class="form-control" id="editBlogImage">
-        </div>
-        <div class="mb-3">
-          <label>Published At</label>
-          <input type="datetime-local" class="form-control" id="editBlogPublishedAt">
-        </div>
+        <div class="mb-3"><label>Published At</label><input type="datetime-local" class="form-control" id="editBlogPublishedAt"></div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -49,6 +40,7 @@
     </div>
   </div>
 </div>
+
 
 <!-- Delete Blog Modal -->
 <div class="modal fade" id="deleteBlogModal" tabindex="-1" aria-labelledby="deleteBlogModalLabel" aria-hidden="true">
@@ -73,7 +65,10 @@
         <div class="mb-3"><label>Admin ID</label><input type="number" class="form-control" id="addBlogAdminId"></div>
         <div class="mb-3"><label>Title</label><input type="text" class="form-control" id="addBlogTitle"></div>
         <div class="mb-3"><label>Content</label><textarea class="form-control" id="addBlogContent"></textarea></div>
-        <div class="mb-3"><label>Image URL</label><input type="text" class="form-control" id="addBlogImageUrl"></div>
+        <div class="mb-3">
+          <label>Image</label>
+          <input type="file" class="form-control" id="addBlogImage" accept="image/*">
+        </div>
         <div class="mb-3"><label>Published At</label><input type="datetime-local" class="form-control" id="addBlogPublishedAt"></div>
       </div>
       <div class="modal-footer">
@@ -83,3 +78,4 @@
     </div>
   </div>
 </div>
+

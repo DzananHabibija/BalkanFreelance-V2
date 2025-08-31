@@ -36,7 +36,7 @@
               <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
                 <div class="navbar-nav">
                   <a class="nav-link active" aria-current="page" href="#home">Home</a>
-                  <a class="nav-link" href="#userprofile">User Profile</a>
+                  <a class="nav-link" href="#user-profile" onclick="setCurrentUserProfileId()">User Profile</a>
                   <a class="nav-link" href="#blogs">Blogs</a>
                   <button class="btn btn-outline-success me-2" type="button" onclick="window.location.href='#create-gig';">Create Gig</button>
                 </div>
@@ -56,15 +56,32 @@
     <section id="create-gig" data-load="pages/create-gig.html"></section>
     <section id="registration" data-load="pages/registration.html"></section>
     <section id="admin" data-load="pages/admin-dashboard.html"></section>
+    <section id="user-profile" data-load="pages/user-profile.html"></section>
+    <section id="single-blog" data-load="pages/single-blog.html"></section>
     <!-- <section id="single-gig" data-load="pages/single-gig.html"></section> -->
 
     <section id="gig-details" data-load="pages/gig-details.html"></section>
     <section id="login" data-load="login/index.html"></section>
   </main>
 
+
+
   <!-- Scripts -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="js/jquery.spapp.min.js"></script>
+  
+  <script>
+  function setCurrentUserProfileId() {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (user && user.id) {
+      localStorage.setItem("viewingUserId", user.id);
+    } else {
+      alert("Not logged in.");
+    }
+  }
+</script>
+
+
   <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 

@@ -35,33 +35,45 @@ Flight::route('GET /blogs/@blog_id', function ($id) {
     Flight::json($blog);
 });
 
-/**
- * @OA\Post(
- *     path="/blogs/add",
- *     summary="Add a new blog post",
- *     tags={"Blogs"},
- *     @OA\RequestBody(
- *         required=true,
- *         @OA\JsonContent(
- *             required={"admin_id", "title", "content"},
- *             @OA\Property(property="admin_id", type="integer"),
- *             @OA\Property(property="title", type="string"),
- *             @OA\Property(property="content", type="string"),
- *             @OA\Property(property="image_url", type="string", nullable=true),
- *             @OA\Property(property="published_at", type="string", format="date-time", nullable=true)
- *         )
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Blog post created"
- *     )
- * )
- */
-Flight::route('POST /blogs/add', function() {
-    $payload = Flight::request()->data->getData();
-    $blog = Flight::get('blog_service')->add_blog($payload);
+Flight::route('POST /blogs/add', function () {
+    $blogService = Flight::get("blog_service");
+
+    $title = $_POST['title'] ?? '';
+    $content = $_POST['content'] ?? '';
+    $admin_id = $_POST['admin_id'] ?? '';
+    $published_at = $_POST['published_at'] ?? null;
+
+    $image_url = null;
+
+    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+        // ✅ Save to root-level uploads/blogs
+        $uploadDir = dirname(__DIR__, 3) . '/uploads/blogs/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
+        $uniqueName = uniqid("blog_", true) . '.' . $ext;
+        $uploadPath = $uploadDir . $uniqueName;
+
+        if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadPath)) {
+            $image_url = 'blogs/' . $uniqueName;
+        }
+    }
+
+    $blogData = [
+        'admin_id' => $admin_id,
+        'title' => $title,
+        'content' => $content,
+        'image_url' => $image_url,
+        'published_at' => $published_at
+    ];
+
+    $blog = $blogService->add_blog($blogData);
     Flight::json($blog);
 });
+
+
 
 /**
  * @OA\Get(
@@ -116,30 +128,46 @@ Flight::route('DELETE /blogs/delete/@blog_id', function ($id) {
 
 
 
-/**
- * @OA\Post(
- *     path="/blogs/update",
- *     summary="Update a blog post",
- *     tags={"Blogs"},
- *     @OA\RequestBody(
- *         required=true,
- *         @OA\JsonContent(
- *             required={"id", "title", "content"},
- *             @OA\Property(property="id", type="integer"),
- *             @OA\Property(property="title", type="string"),
- *             @OA\Property(property="content", type="string"),
- *             @OA\Property(property="image_url", type="string", nullable=true),
- *             @OA\Property(property="published_at", type="string", format="date-time", nullable=true)
- *         )
- *     ),
- *     @OA\Response(response=200, description="Blog updated successfully")
- * )
- */
 Flight::route('POST /blogs/update', function () {
-    $data = Flight::request()->data->getData();
     $service = Flight::get("blog_service");
-    $updated = $service->update_blog($data);
+
+    $id = $_POST['id'] ?? null;
+    $title = $_POST['title'] ?? '';
+    $content = $_POST['content'] ?? '';
+    $published_at = $_POST['published_at'] ?? null;
+
+    $image_url = null;
+
+    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+        $uploadDir = dirname(__DIR__, 3) . '/uploads/blogs/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
+        $uniqueName = uniqid("blog_", true) . '.' . $ext;
+        $uploadPath = $uploadDir . $uniqueName;
+
+        if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadPath)) {
+            $image_url = 'blogs/' . $uniqueName;
+        }
+    } else {
+        // Keep current image if no new one uploaded
+        $existing = $service->get_blog_by_id($id);
+        $image_url = $existing['image_url'] ?? null;
+    }
+
+    $updated = $service->update_blog([
+        'id' => $id,
+        'title' => $title,
+        'content' => $content,
+        'image_url' => $image_url,
+        'published_at' => $published_at
+    ]);
+
     Flight::json(["message" => "Blog updated", "blog" => $updated]);
 });
+
+
 
 

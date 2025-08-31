@@ -64,11 +64,22 @@ Flight::route('POST /gigs/add', function() {
  *     )
  * )
  */
-Flight::route('GET /gigs', function() {
+Flight::route('GET /gigs/all', function() {
     $service = Flight::get("gig_service");
     $gigs = $service->get_gigs();
     Flight::json($gigs);
 });
+
+
+Flight::route('GET /gigs', function(){
+    $excludeUserId = isset($_GET['excludeUser']) ? intval($_GET['excludeUser']) : null;
+
+    $gigService = new GigService();
+    $gigs = $gigService->getAllGigs($excludeUserId);
+
+    Flight::json($gigs);
+});
+
 
 /**
  * @OA\Delete(
@@ -146,4 +157,17 @@ Flight::route('POST /gigs/update', function () {
     $service = Flight::get("gig_service");
     $updated = $service->update_gig($data);
     Flight::json(["message" => "Gig updated", "gig" => $updated]);
+});
+
+
+Flight::route('PUT /gigs/@id', function($id) {
+    $data = Flight::request()->data->getData();
+    $title = $data['title'] ?? null;
+    $price = $data['price'] ?? null;
+    $status = $data['status'] ?? null;
+
+    $gigService = new GigService();
+    $updatedGig = $gigService->updateGig($id, $title, $price, $status);
+
+    Flight::json($updatedGig);
 });

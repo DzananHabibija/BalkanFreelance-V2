@@ -124,6 +124,35 @@ Flight::route('POST /users/update', function () {
 });
 
 
+Flight::route('GET /user-profile/@id', function($id){
+    $userService = new UserService();
+    $user = $userService->getUserById($id);
+    $gigs = $userService->getUserGigs($id);
+    
+    if (!$user) {
+        Flight::json(["error" => "User not found"], 404);
+    } else {
+        Flight::json([
+            "user" => $user,
+            "gigs" => $gigs
+        ]);
+    }
+});
+
+
+Flight::route('PUT /users/@id/bio', function($id) {
+    $data = Flight::request()->data->getData();
+    $bio = $data['bio'] ?? '';
+
+    $userService = new UserService();
+    $userService->updateBio($id, $bio);
+
+    Flight::json(["message" => "Bio updated"]);
+});
+
+
+
+
 /**
  * @OA\Post(
  *     path="/otp/qr-code",

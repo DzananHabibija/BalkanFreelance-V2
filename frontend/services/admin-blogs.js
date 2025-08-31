@@ -34,23 +34,35 @@ function initAdminBlogs() {
     editModal.show();
   });
 
-  $('#saveBlogChangesBtn').click(function () {
-    const updatedBlog = {
-      id: $('#editBlogId').val(),
-      title: $('#editBlogTitle').val(),
-      content: $('#editBlogContent').val(),
-      image_url: $('#editBlogImage').val(),
-      published_at: $('#editBlogPublishedAt').val()
-    };
+ $('#saveBlogChangesBtn').click(function () {
+  const formData = new FormData();
+  formData.append("id", $('#editBlogId').val());
+  formData.append("title", $('#editBlogTitle').val());
+  formData.append("content", $('#editBlogContent').val());
+  formData.append("published_at", $('#editBlogPublishedAt').val());
 
-    $.post(`${API_BASE}/blogs/update`, updatedBlog, function () {
-      editModal.hide();
-      blogsTable.ajax.reload(null, false);
+  const imageFile = $('#editBlogImageFile')[0].files[0];
+  if (imageFile) {
+    formData.append("image", imageFile);
+  }
+
+  $.ajax({
+    url: `${API_BASE}/blogs/update`,
+    method: "POST",
+    data: formData,
+    processData: false,
+    contentType: false,
+    success: function () {
+      $('#editBlogModal').modal('hide');
+      $('#blogsTable').DataTable().ajax.reload(null, false);
       toastr.success('Blog updated successfully.');
-    }).fail(() => {
+    },
+    error: function () {
       toastr.error('Failed to update blog.');
-    });
+    }
   });
+});
+
 
   $('#blogsTable tbody').on('click', '.deleteBlogBtn', function () {
     selectedBlogId = $(this).data('id');
@@ -81,24 +93,31 @@ $('#addBlogBtn').click(function () {
 });
 
 $('#createBlogBtn').click(function () {
-  const newBlog = {
-    admin_id: $('#addBlogAdminId').val(),
-    title: $('#addBlogTitle').val(),
-    content: $('#addBlogContent').val(),
-    image_url: $('#addBlogImageUrl').val(),
-    published_at: $('#addBlogPublishedAt').val()
-  };
+  const formData = new FormData();
+  formData.append("admin_id", $('#addBlogAdminId').val());
+  formData.append("title", $('#addBlogTitle').val());
+  formData.append("content", $('#addBlogContent').val());
+  formData.append("published_at", $('#addBlogPublishedAt').val());
 
-  if (!newBlog.admin_id || !newBlog.title || !newBlog.content) {
-    toastr.error('Please fill in required fields (admin_id, title, content).');
-    return;
+  const imageFile = $('#addBlogImage')[0].files[0];
+  if (imageFile) {
+    formData.append("image", imageFile);
   }
 
-  $.post(`${API_BASE}/blogs/add`, newBlog, function () {
-    $('#addBlogModal').modal('hide');
-    $('#blogsTable').DataTable().ajax.reload(null, false);
-    toastr.success('Blog created successfully.');
-  }).fail(() => {
-    toastr.error('Failed to create blog.');
+  $.ajax({
+    url: `${API_BASE}/blogs/add`,
+    method: "POST",
+    data: formData,
+    processData: false,
+    contentType: false,
+    success: function () {
+      $('#addBlogModal').modal('hide');
+      $('#blogsTable').DataTable().ajax.reload(null, false);
+      toastr.success('Blog created successfully.');
+    },
+    error: function () {
+      toastr.error('Failed to create blog.');
+    }
   });
 });
+

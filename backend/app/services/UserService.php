@@ -49,6 +49,19 @@ class UserService
     public function update_user($data) {
         return $this->dao->update_user($data);
     }
+
+    public function getUserById($id) {
+    return $this->dao->getById($id);
+    }
+
+    public function getUserGigs($id) {
+        return $this->dao->getGigsByUserId($id);
+    }
+
+    public function updateBio($id, $bio) {
+     return $this->dao->updateBio($id, $bio);
+}
+
     
     
 }
