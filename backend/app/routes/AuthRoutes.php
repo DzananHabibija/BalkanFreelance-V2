@@ -123,7 +123,7 @@ Flight::route('POST /auth/register', function() {
     }
 
     if (Flight::get('auth_service')->get_user_by_email($data['email']) ) { #||Flight::get('auth_service')->get_user_by_email_or_username($data['username'])
-        Flight::halt(400, "Email already in use"); #or "Username already in use"
+        Flight::halt(400, "This email is already associated with an existing account"); #or "Username already in use"
     }   
 
     $breached = Utils::check_if_password_breached($data['password']);

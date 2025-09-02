@@ -46,4 +46,8 @@ Class GigService
         return $this->dao->updateGig($id, $title, $price, $status);
     }
 
+    public function getAllWithFilters(array $filters) {
+        return $this->dao->getAllWithFilters($filters);
+    }
+
 }

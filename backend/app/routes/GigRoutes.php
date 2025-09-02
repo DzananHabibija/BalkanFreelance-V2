@@ -71,14 +71,29 @@ Flight::route('GET /gigs/all', function() {
 });
 
 
-Flight::route('GET /gigs', function(){
+Flight::route('GET /gigs', function () {
+    $minPrice      = isset($_GET['min_price']) ? floatval($_GET['min_price']) : null;
+    $maxPrice      = isset($_GET['max_price']) ? floatval($_GET['max_price']) : null;
+    $categoryId    = isset($_GET['category_id']) ? intval($_GET['category_id']) : null;
+    $postedWithin  = isset($_GET['posted_within']) ? $_GET['posted_within'] : null; // 'week'|'month'|'year'
     $excludeUserId = isset($_GET['excludeUser']) ? intval($_GET['excludeUser']) : null;
+    $q             = isset($_GET['q']) ? trim($_GET['q']) : null;
+
+    $filters = [
+        'min_price'     => $minPrice !== null && $minPrice !== '' ? $minPrice : null,
+        'max_price'     => $maxPrice !== null && $maxPrice !== '' ? $maxPrice : null,
+        'category_id'   => $categoryId !== null && $categoryId !== '' ? $categoryId : null,
+        'posted_within' => in_array($postedWithin, ['week','month','year'], true) ? $postedWithin : null,
+        'exclude_user'  => $excludeUserId !== null && $excludeUserId !== '' ? $excludeUserId : null,
+        'q'             => $q !== null && $q !== '' ? $q : null,
+    ];
 
     $gigService = new GigService();
-    $gigs = $gigService->getAllGigs($excludeUserId);
+    $gigs = $gigService->getAllWithFilters($filters);
 
     Flight::json($gigs);
 });
+
 
 
 /**
