@@ -60,7 +60,17 @@ class UserService
 
     public function updateBio($id, $bio) {
      return $this->dao->updateBio($id, $bio);
-}
+    }
+
+    public function get_user_by_email($email) {
+        return $this->dao->get_user_by_email($email);
+    }
+
+    public function get_user_dao() {
+         return $this->dao;
+    }
+
+
 
     
     

@@ -2,7 +2,13 @@ function initAdminCategories() {
   const categoriesTable = $('#categoriesTable').DataTable({
     ajax: {
       url: `${API_BASE}/categories`,
-      dataSrc: ''
+      dataSrc: '',
+      beforeSend: function (xhr) {
+        const user = Utils.get_from_localstorage("user");
+        if (user && user.token) {
+          xhr.setRequestHeader("Authorization", "Bearer " + user.token);
+        }
+      }
     },
     columns: [
       { data: 'id' },
@@ -22,6 +28,7 @@ function initAdminCategories() {
   const deleteModal = new bootstrap.Modal(document.getElementById('deleteCategoryModal'));
   let selectedCategoryId = null;
 
+  // Edit
   $('#categoriesTable tbody').on('click', '.editCategoryBtn', function () {
     const data = categoriesTable.row($(this).parents('tr')).data();
     $('#editCategoryId').val(data.id);
@@ -35,15 +42,28 @@ function initAdminCategories() {
       name: $('#editCategoryName').val()
     };
 
-    $.post(`${API_BASE}/categories/update`, updated, function () {
-      editModal.hide();
-      categoriesTable.ajax.reload(null, false);
-      toastr.success('Category updated.');
-    }).fail(() => {
-      toastr.error('Update failed.');
+    $.ajax({
+      url: `${API_BASE}/categories/update`,
+      method: 'POST',
+      data: updated,
+      beforeSend: function (xhr) {
+        const user = Utils.get_from_localstorage("user");
+        if (user && user.token) {
+          xhr.setRequestHeader("Authorization", "Bearer " + user.token);
+        }
+      },
+      success: function () {
+        editModal.hide();
+        categoriesTable.ajax.reload(null, false);
+        toastr.success('Category updated.');
+      },
+      error: function () {
+        toastr.error('Update failed.');
+      }
     });
   });
 
+  // Delete
   $('#categoriesTable tbody').on('click', '.deleteCategoryBtn', function () {
     selectedCategoryId = $(this).data('id');
     deleteModal.show();
@@ -53,6 +73,12 @@ function initAdminCategories() {
     $.ajax({
       url: `${API_BASE}/categories/delete/${selectedCategoryId}`,
       type: 'DELETE',
+      beforeSend: function (xhr) {
+        const user = Utils.get_from_localstorage("user");
+        if (user && user.token) {
+          xhr.setRequestHeader("Authorization", "Bearer " + user.token);
+        }
+      },
       success: function () {
         deleteModal.hide();
         categoriesTable.ajax.reload(null, false);
@@ -63,30 +89,40 @@ function initAdminCategories() {
       }
     });
   });
-}
 
-
-
-
-$('#addCategoryBtn').click(function () {
-  $('#addCategoryModal').modal('show');
-});
-
-$('#createCategoryBtn').click(function () {
-  const newCategory = {
-    name: $('#addCategoryName').val()
-  };
-
-  if (!newCategory.name) {
-    toastr.error('Please provide a category name.');
-    return;
-  }
-
-  $.post(`${API_BASE}/categories/add`, newCategory, function () {
-    $('#addCategoryModal').modal('hide');
-    $('#categoriesTable').DataTable().ajax.reload(null, false);
-    toastr.success('Category created successfully.');
-  }).fail(() => {
-    toastr.error('Failed to create category.');
+  // Add
+  $('#addCategoryBtn').click(function () {
+    $('#addCategoryModal').modal('show');
   });
-});
+
+  $('#createCategoryBtn').click(function () {
+    const newCategory = {
+      name: $('#addCategoryName').val()
+    };
+
+    if (!newCategory.name) {
+      toastr.error('Please provide a category name.');
+      return;
+    }
+
+    $.ajax({
+      url: `${API_BASE}/categories/add`,
+      method: 'POST',
+      data: newCategory,
+      beforeSend: function (xhr) {
+        const user = Utils.get_from_localstorage("user");
+        if (user && user.token) {
+          xhr.setRequestHeader("Authorization", "Bearer " + user.token);
+        }
+      },
+      success: function () {
+        $('#addCategoryModal').modal('hide');
+        $('#categoriesTable').DataTable().ajax.reload(null, false);
+        toastr.success('Category created successfully.');
+      },
+      error: function () {
+        toastr.error('Failed to create category.');
+      }
+    });
+  });
+}

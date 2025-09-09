@@ -144,6 +144,15 @@ class UserDao{
       return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    public function get_user_by_email($email) {
+        $query = "SELECT * FROM users WHERE email = :email";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':email', $email);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+
 
   
 
@@ -170,7 +179,8 @@ class UserDao{
 
     public function insert_google_user($table, $entity)
     {
-        $data = $entity->getData();
+        $data = $entity; // $data = $entity->getData();
+
 
         // Only keep allowed fields for BalkanFreelance
         $allowedFields = [

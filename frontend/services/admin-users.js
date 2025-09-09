@@ -1,14 +1,17 @@
 function initAdminUsers() {
-    console.log("DataTables loaded?", typeof $.fn.dataTable); // should log "function"
-    console.log("DataTables available in admin-users.js?", typeof $.fn.dataTable);
-
-
-
+  console.log("DataTables loaded?", typeof $.fn.dataTable);
+  console.log("DataTables available in admin-users.js?", typeof $.fn.dataTable);
 
   let usersTable = $('#usersTable').DataTable({
     ajax: {
       url: `${API_BASE}/users/`,
-      dataSrc: ''
+      dataSrc: '',
+      beforeSend: function (xhr) {
+        const user = Utils.get_from_localstorage("user");
+        if (user && user.token) {
+          xhr.setRequestHeader("Authorization", "Bearer " + user.token);
+        }
+      }
     },
     columns: [
       { data: 'id' },
@@ -38,6 +41,7 @@ function initAdminUsers() {
   const deleteModal = new bootstrap.Modal(document.getElementById('deleteUserModal'));
   let selectedUserId = null;
 
+  // Edit button
   $('#usersTable tbody').on('click', '.editUserBtn', function () {
     const data = usersTable.row($(this).parents('tr')).data();
     $('#editUserId').val(data.id);
@@ -51,6 +55,7 @@ function initAdminUsers() {
     editModal.show();
   });
 
+  // Save edited user
   $('#saveUserChangesBtn').click(function () {
     const updatedUser = {
       id: $('#editUserId').val(),
@@ -63,24 +68,44 @@ function initAdminUsers() {
       isAdmin: $('#editRole').val()
     };
 
-    $.post(`${API_BASE}/users/update`, updatedUser, function () {
-      editModal.hide();
-      usersTable.ajax.reload(null, false);
-      toastr.success('User was edited successfully.');
-    }).fail(() => {
-      toastr.error('Failed to update user.');
+    $.ajax({
+      url: `${API_BASE}/users/update`,
+      method: 'POST',
+      data: updatedUser,
+      beforeSend: function (xhr) {
+        const user = Utils.get_from_localstorage("user");
+        if (user && user.token) {
+          xhr.setRequestHeader("Authorization", "Bearer " + user.token);
+        }
+      },
+      success: function () {
+        editModal.hide();
+        usersTable.ajax.reload(null, false);
+        toastr.success('User was edited successfully.');
+      },
+      error: function () {
+        toastr.error('Failed to update user.');
+      }
     });
   });
 
+  // Delete button
   $('#usersTable tbody').on('click', '.deleteUserBtn', function () {
     selectedUserId = $(this).data('id');
     deleteModal.show();
   });
 
+  // Confirm delete
   $('#confirmDeleteBtn').click(function () {
     $.ajax({
       url: `${API_BASE}/users/delete/${selectedUserId}`,
       type: 'DELETE',
+      beforeSend: function (xhr) {
+        const user = Utils.get_from_localstorage("user");
+        if (user && user.token) {
+          xhr.setRequestHeader("Authorization", "Bearer " + user.token);
+        }
+      },
       success: function () {
         deleteModal.hide();
         usersTable.ajax.reload(null, false);
@@ -91,38 +116,48 @@ function initAdminUsers() {
       }
     });
   });
-}
 
-
-
-
-$('#addUserBtn').click(function () {
-  $('#addUserModal').modal('show');
-});
-
-$('#createUserBtn').click(function () {
-  const newUser = {
-    first_name: $('#addFirstName').val(),
-    last_name: $('#addLastName').val(),
-    email: $('#addEmail').val(),
-    password: $('#addPassword').val(),
-    country_id: $('#addCountryId').val(),
-    bio: $('#addBio').val(),
-    balance: $('#addBalance').val(),
-    isAdmin: $('#addRole').val()
-  };
-
-  // Basic validation
-  if (!newUser.first_name || !newUser.last_name || !newUser.email || !newUser.password) {
-    toastr.error('Please fill in all required fields.');
-    return;
-  }
-
-  $.post(`${API_BASE}/users/add`, newUser, function () {
-    $('#addUserModal').modal('hide');
-    $('#usersTable').DataTable().ajax.reload(null, false);
-    toastr.success('User created successfully.');
-  }).fail(() => {
-    toastr.error('Failed to create user.');
+  // Add new user modal
+  $('#addUserBtn').click(function () {
+    $('#addUserModal').modal('show');
   });
-});
+
+  // Create new user
+  $('#createUserBtn').click(function () {
+    const newUser = {
+      first_name: $('#addFirstName').val(),
+      last_name: $('#addLastName').val(),
+      email: $('#addEmail').val(),
+      password: $('#addPassword').val(),
+      country_id: $('#addCountryId').val(),
+      bio: $('#addBio').val(),
+      balance: $('#addBalance').val(),
+      isAdmin: $('#addRole').val()
+    };
+
+    if (!newUser.first_name || !newUser.last_name || !newUser.email || !newUser.password) {
+      toastr.error('Please fill in all required fields.');
+      return;
+    }
+
+    $.ajax({
+      url: `${API_BASE}/users/add`,
+      method: 'POST',
+      data: newUser,
+      beforeSend: function (xhr) {
+        const user = Utils.get_from_localstorage("user");
+        if (user && user.token) {
+          xhr.setRequestHeader("Authorization", "Bearer " + user.token);
+        }
+      },
+      success: function () {
+        $('#addUserModal').modal('hide');
+        $('#usersTable').DataTable().ajax.reload(null, false);
+        toastr.success('User created successfully.');
+      },
+      error: function () {
+        toastr.error('Failed to create user.');
+      }
+    });
+  });
+}

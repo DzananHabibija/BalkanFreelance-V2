@@ -1,6 +1,7 @@
 $(document).ready(function () {
   const urlParams = new URLSearchParams(window.location.search);
   const gigId = urlParams.get('id');
+  const token = localStorage.getItem('jwt')?.replace(/"/g, ''); // Fix: strip quotes if any // Get token from localStorage
 
   if (!gigId) {
     $('#gigContainer').html(`<div class="alert alert-danger">Invalid Gig ID</div>`);
@@ -10,6 +11,9 @@ $(document).ready(function () {
   $.ajax({
     url: `http://localhost/BalkanFreelance/backend/gigs/${gigId}`,
     type: 'GET',
+    headers: {
+      'Authorization': 'Bearer ' + token
+    },
     success: function (gig) {
       $('#loadingSpinner').remove();
 
@@ -39,6 +43,7 @@ $(document).ready(function () {
       $('#gigContainer').html(gigHtml);
     },
     error: function (xhr) {
+      console.error("Error loading gig:", xhr.responseText);
       $('#gigContainer').html(`<div class="alert alert-danger">Error loading gig: ${xhr.responseText}</div>`);
     }
   });

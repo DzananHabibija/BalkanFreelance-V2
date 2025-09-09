@@ -4,7 +4,13 @@ function initAdminGigs() {
   const gigsTable = $('#gigsTable').DataTable({
     ajax: {
       url: `${API_BASE}/gigs`,
-      dataSrc: ''
+      dataSrc: '',
+      beforeSend: function (xhr) {
+        const user = Utils.get_from_localstorage("user");
+        if (user && user.token) {
+          xhr.setRequestHeader("Authorization", "Bearer " + user.token);
+        }
+      }
     },
     columns: [
       { data: 'id' },
@@ -52,12 +58,24 @@ function initAdminGigs() {
       status: $('#editGigStatus').val()
     };
 
-    $.post(`${API_BASE}/gigs/update`, updatedGig, function () {
-      editModal.hide();
-      gigsTable.ajax.reload(null, false);
-      toastr.success('Gig updated successfully.');
-    }).fail(() => {
-      toastr.error('Failed to update gig.');
+    $.ajax({
+      url: `${API_BASE}/gigs/update`,
+      method: 'POST',
+      data: updatedGig,
+      beforeSend: function (xhr) {
+        const user = Utils.get_from_localstorage("user");
+        if (user && user.token) {
+          xhr.setRequestHeader("Authorization", "Bearer " + user.token);
+        }
+      },
+      success: function () {
+        editModal.hide();
+        gigsTable.ajax.reload(null, false);
+        toastr.success('Gig updated successfully.');
+      },
+      error: function () {
+        toastr.error('Failed to update gig.');
+      }
     });
   });
 
@@ -71,6 +89,12 @@ function initAdminGigs() {
     $.ajax({
       url: `${API_BASE}/gigs/delete/${selectedGigId}`,
       type: 'DELETE',
+      beforeSend: function (xhr) {
+        const user = Utils.get_from_localstorage("user");
+        if (user && user.token) {
+          xhr.setRequestHeader("Authorization", "Bearer " + user.token);
+        }
+      },
       success: function () {
         deleteModal.hide();
         gigsTable.ajax.reload(null, false);
@@ -81,37 +105,47 @@ function initAdminGigs() {
       }
     });
   });
-}
 
-
-
-
-$('#addGigBtn').click(function () {
-  $('#addGigModal').modal('show');
-});
-
-$('#createGigBtn').click(function () {
-  const newGig = {
-    user_id: $('#addGigUserId').val(),
-    title: $('#addGigTitle').val(),
-    description: $('#addGigDescription').val(),
-    content: $('#addGigContent').val(),
-    category_id: $('#addGigCategoryId').val(),
-    tags: $('#addGigTags').val(),
-    price: $('#addGigPrice').val(),
-    status: $('#addGigStatus').val()
-  };
-
-  if (!newGig.user_id || !newGig.title || !newGig.description || !newGig.price) {
-    toastr.error('Please fill in all required fields.');
-    return;
-  }
-
-  $.post(`${API_BASE}/gigs/add`, newGig, function () {
-    $('#addGigModal').modal('hide');
-    $('#gigsTable').DataTable().ajax.reload(null, false);
-    toastr.success('Gig created successfully.');
-  }).fail(() => {
-    toastr.error('Failed to create gig.');
+  // Add new gig modal
+  $('#addGigBtn').click(function () {
+    $('#addGigModal').modal('show');
   });
-});
+
+  $('#createGigBtn').click(function () {
+    const newGig = {
+      user_id: $('#addGigUserId').val(),
+      title: $('#addGigTitle').val(),
+      description: $('#addGigDescription').val(),
+      content: $('#addGigContent').val(),
+      category_id: $('#addGigCategoryId').val(),
+      tags: $('#addGigTags').val(),
+      price: $('#addGigPrice').val(),
+      status: $('#addGigStatus').val()
+    };
+
+    if (!newGig.user_id || !newGig.title || !newGig.description || !newGig.price) {
+      toastr.error('Please fill in all required fields.');
+      return;
+    }
+
+    $.ajax({
+      url: `${API_BASE}/gigs/add`,
+      method: 'POST',
+      data: newGig,
+      beforeSend: function (xhr) {
+        const user = Utils.get_from_localstorage("user");
+        if (user && user.token) {
+          xhr.setRequestHeader("Authorization", "Bearer " + user.token);
+        }
+      },
+      success: function () {
+        $('#addGigModal').modal('hide');
+        $('#gigsTable').DataTable().ajax.reload(null, false);
+        toastr.success('Gig created successfully.');
+      },
+      error: function () {
+        toastr.error('Failed to create gig.');
+      }
+    });
+  });
+}

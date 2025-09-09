@@ -9,7 +9,6 @@ $(document).ready(function () {
     pageNotFound: "404.html"
   });
 
-  // ✅ Define real routes
   app.route({
     view: 'home',
     load: 'home.html'

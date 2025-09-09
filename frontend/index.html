@@ -24,6 +24,7 @@
 
 </head>
 <body>
+
   <!-- Navbar -->
 <nav class="navbar navbar-expand-lg bg-body-tertiary">
             <div class="container-fluid">
@@ -69,7 +70,7 @@
   <!-- Scripts -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="js/jquery.spapp.min.js"></script>
-  
+
   <script>
   function setCurrentUserProfileId() {
     const user = JSON.parse(localStorage.getItem("user"));
@@ -81,6 +82,17 @@
   }
 </script>
 
+<!-- learn this -->
+<!-- <script>
+  $.ajaxSetup({
+    beforeSend: function (xhr) {
+      const token = localStorage.getItem('jwt');
+      if (token) {
+        xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+      }
+    }
+  });
+</script> -->
 
   <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
@@ -92,8 +104,10 @@
 
 
   <!-- Your app logic -->
-  <script src="services/ajaxsetup.js"></script>
   <script src="utils/utils.js"></script>
+  <script src="services/ajaxsetup.js"></script>
+  <script src="services/auth-guard.js"></script>
+
   <script src="js/custom.js"></script>
   <!-- <script src="js/jquery.spapp.min.js"></script> -->
   <!-- <script src="services/admin-users.js"></script> -->

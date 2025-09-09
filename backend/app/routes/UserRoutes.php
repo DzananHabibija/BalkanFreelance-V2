@@ -254,7 +254,7 @@ Flight::route('GET /google-callback', function () {
 
     $email = $googleUserInfo->email;
     $firstName = $googleUserInfo->givenName;
-    $lastName = $googleUserInfo->familyName;
+    $lastName = $googleUserInfo->familyName ?? 'User';
 
     $userService = Flight::get('user_service');
     $user = $userService->get_user_by_email($email); // Adjust this method if needed
@@ -282,13 +282,16 @@ Flight::route('GET /google-callback', function () {
 
     // Generate JWT
     $jwtPayload = [
+    'user' => [
         'id' => $user['id'],
         'email' => $user['email'],
         'first_name' => $user['first_name'],
-        'last_name' => $user['last_name'],
+        'last_name' => $user['last_name']
+        ],
         'iat' => time(),
-        'exp' => time() + 3600 // 1 hour expiry
+        'exp' => time() + 3600
     ];
+
     $jwt = \Firebase\JWT\JWT::encode($jwtPayload, JWT_SECRET, 'HS256');
 
     // Redirect with token
