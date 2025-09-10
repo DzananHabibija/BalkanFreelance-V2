@@ -19,10 +19,13 @@ function loadUserProfile(userId) {
 
       $("#user-info").html(`
         <p><strong>Name:</strong> ${user.first_name} ${user.last_name}</p>
-        <p><strong>Email:</strong> ${user.email}</p>
-        ${bioHtml}
-        <div id="bio-controls">${bioControls}</div>
+      <p><strong>Email:</strong> ${user.email}</p>
+      <p><strong>Balance:</strong> $<span id="userBalance">0.00</span></p>
+      ${bioHtml}
+      <div id="bio-controls">${bioControls}</div>
       `);
+
+      loadUserBalance(user.id);
 
       if (!gigs.length) {
         $("#user-gigs").html(`<p class="text-muted">No gigs created by this user.</p>`);
@@ -134,6 +137,19 @@ function deleteGig(id) {
     },
     error: function () {
       toastr.error("Failed to delete gig. Please try again.");
+    }
+  });
+}
+
+function loadUserBalance(userId) {
+  $.ajax({
+    url: `${API_BASE}/user/${userId}/balance`,
+    method: "GET",
+    success: function (res) {
+      $("#userBalance").text(parseFloat(res.balance).toFixed(2));
+    },
+    error: function () {
+      $("#userBalance").text("0.00");
     }
   });
 }

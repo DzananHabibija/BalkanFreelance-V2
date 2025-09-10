@@ -42,9 +42,10 @@
                   <a class="nav-link" href="#blogs">Blogs</a>
                   <button class="btn btn-outline-success me-2" type="button" onclick="window.location.href='#create-gig';">Create Gig</button>
                 </div>
-                <div class="navbar-nav ms-auto">
-                  <button class="nav-link" onclick="Utils.logout()">Logout</button>
-                </div>
+                <div class="navbar-nav ms-auto d-flex align-items-center gap-2">
+                <a class="btn btn-outline-primary" href="#add-funds">My Wallet</a>
+                <button class="nav-link" onclick="Utils.logout()">Logout</button>
+              </div>
               </div>
               
             </div>
@@ -64,6 +65,7 @@
 
     <section id="gig-details" data-load="pages/gig-details.html"></section>
     <section id="login" data-load="login/index.html"></section>
+    <section id="add-funds" data-load="pages/add-funds.html"></section>
   </main>
 
 

@@ -60,6 +60,11 @@ $(document).ready(function () {
   });
 
   app.route({
+  view: 'add-funds',
+  load: 'add-funds.html' 
+  });
+
+  app.route({
   view: 'single-blog',
   load: 'single-blog.html',
   onEnter: function () {

@@ -299,4 +299,46 @@ Flight::route('GET /google-callback', function () {
     Flight::redirect($baseFrontendUrl . "?jwt=" . urlencode($jwt));
 });
 
+Flight::route('GET /user/@id/balance', function($id){
+    $userService = Flight::get("user_service");
+    $balance = $userService->getBalance($id);
+
+    if ($balance === false) {
+        Flight::json(["error" => "User not found or DB error"], 404);
+    } else {
+        Flight::json(["balance" => floatval($balance)]);
+    }
+});
+
+
+Flight::route('POST /top-up', function () {
+    $data = Flight::request()->data->getData();
+    $amount = floatval($data['amount'] ?? 0);
+
+    if ($amount <= 0) {
+        Flight::json(["error" => "Invalid top-up amount."], 400);
+        return;
+    }
+
+    $headers = getallheaders();
+    $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? null;
+
+    if (!$authHeader || !preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+        Flight::json(["error" => "Missing or invalid Authorization header"], 401);
+        return;
+    }
+
+    $jwt = $matches[1];
+    try {
+        $decoded = \Firebase\JWT\JWT::decode($jwt, new \Firebase\JWT\Key(JWT_SECRET, 'HS256'));
+        $userId = $decoded->user->id;
+
+        $userService = Flight::get("user_service");
+        $userService->increaseBalance($userId, $amount);
+
+        Flight::json(["message" => "Balance updated successfully"]);
+    } catch (Exception $e) {
+        Flight::json(["error" => "Invalid or expired token: " . $e->getMessage()], 401);
+    }
+});
 
