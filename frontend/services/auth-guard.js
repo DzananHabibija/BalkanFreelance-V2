@@ -4,6 +4,6 @@ $(document).ready(function () {
 
   if (!token) {
     alert("You must log in first.");
-    window.location.href = "#login";
+    window.location.href = "login/index.html";
   }
 });

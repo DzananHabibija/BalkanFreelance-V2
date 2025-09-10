@@ -47,11 +47,39 @@ Flight::route('GET /gigs/@gig_id', function ($id) {
  *     )
  * )
  */
-Flight::route('POST /gigs/add', function() {
-    $payload = Flight::request()->data->getData();
-    $gig = Flight::get('gig_service')->add_gig($payload);
-    Flight::json($gig);
+Flight::route('POST /gigs/add', function () {
+    $service = Flight::get("gig_service");
+
+    // Multipart form: access via $_POST and $_FILES
+    $gig = $_POST;
+
+    // Handle image upload
+    if (!empty($_FILES['image']['tmp_name'])) {
+        $uploadsDir = __DIR__ . '/../../../uploads/gig_images/';
+        if (!file_exists($uploadsDir)) {
+            mkdir($uploadsDir, 0777, true);
+        }
+
+        $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
+        $filename = uniqid('gig_') . "." . $ext;
+        $destination = $uploadsDir . $filename;
+
+        if (move_uploaded_file($_FILES['image']['tmp_name'], $destination)) {
+            $gig['gig_image_url'] = '/uploads/gig_images/' . $filename;
+        } else {
+            Flight::halt(500, "Failed to upload image");
+        }
+    }
+
+    // Add timestamp if not sent
+    if (!isset($gig['created_at']) || empty($gig['created_at'])) {
+        $gig['created_at'] = date('Y-m-d H:i:s');
+    }
+
+    $createdGig = $service->add_gig($gig);
+    Flight::json($createdGig);
 });
+
 
 /**
  * @OA\Get(
@@ -186,3 +214,9 @@ Flight::route('PUT /gigs/@id', function($id) {
 
     Flight::json($updatedGig);
 });
+
+Flight::route('GET /gigs/full/@id', function($id){
+    $service = Flight::get("gig_service");
+    Flight::json($service->getGigByIdWithUser($id));
+});
+

@@ -1,50 +1,142 @@
-$(document).ready(function () {
-  const urlParams = new URLSearchParams(window.location.search);
-  const gigId = urlParams.get('id');
-  const token = localStorage.getItem('jwt')?.replace(/"/g, ''); // Fix: strip quotes if any // Get token from localStorage
+if (typeof SingleGig === 'undefined') {
+  const SingleGig = (function () {
+    const BASE_URL = "http://localhost/BalkanFreelance";
 
-  if (!gigId) {
-    $('#gigContainer').html(`<div class="alert alert-danger">Invalid Gig ID</div>`);
-    return;
-  }
-
-  $.ajax({
-    url: `http://localhost/BalkanFreelance/backend/gigs/${gigId}`,
-    type: 'GET',
-    headers: {
-      'Authorization': 'Bearer ' + token
-    },
-    success: function (gig) {
-      $('#loadingSpinner').remove();
-
-      const gigHtml = `
-        <div class="card shadow-lg">
-          <img src="${gig.image_url || 'https://via.placeholder.com/800x300?text=No+Image'}" class="card-img-top" alt="Gig Image">
-
-          <div class="card-body">
-            <h3 class="card-title">${gig.title}</h3>
-            <p class="text-muted mb-1">Posted by: <strong>${gig.user_fullname || 'Anonymous'}</strong></p>
-            <p class="text-muted mb-3">Category: ${gig.category_name || 'Uncategorized'}</p>
-
-            <h5>Description</h5>
-            <p>${gig.description}</p>
-
-            <h5>Full Content</h5>
-            <div class="markdown-body">${marked.parse(gig.content || "")}</div>
-
-            <div class="mt-3">
-              <span class="badge bg-info text-dark">Tags: ${gig.tags || 'None'}</span>
-              <span class="badge bg-success ms-2">Price: $${gig.price}</span>
-            </div>
-          </div>
-        </div>
-      `;
-
-      $('#gigContainer').html(gigHtml);
-    },
-    error: function (xhr) {
-      console.error("Error loading gig:", xhr.responseText);
-      $('#gigContainer').html(`<div class="alert alert-danger">Error loading gig: ${xhr.responseText}</div>`);
+    function isSingleGigRoute(hash) {
+      return hash === "#single-gig" || /^#single-gig(\/|\?)/i.test(hash || "");
     }
+
+    function getCurrentGigId() {
+      try {
+        const stored = sessionStorage.getItem("bf_current_gig_id");
+        if (stored) return stored;
+      } catch (e) {}
+
+      const hash = window.location.hash || "";
+      const m = hash.match(/^#single-gig\/([^\/\?\#]+)/i);
+      if (m && m[1]) return decodeURIComponent(m[1]);
+
+      const qIndex = hash.indexOf("?");
+      if (qIndex !== -1) {
+        const params = new URLSearchParams(hash.substring(qIndex + 1));
+        return params.get("id");
+      }
+
+      return null;
+    }
+
+    function render() {
+      if (typeof $ === 'undefined') {
+        console.error("jQuery ($) is not defined.");
+        return;
+      }
+
+      const gigId = getCurrentGigId();
+      const $container = $("#gigContainer");
+
+      if (!gigId) {
+        $container.html(`<div class="alert alert-danger">Invalid gig ID</div>`);
+        return;
+      }
+
+      const token = localStorage.getItem("jwt")?.replace(/"/g, "");
+
+      $.ajax({
+        url: `${BASE_URL}/backend/gigs/full/${gigId}`,
+        type: 'GET',
+        headers: {
+          'Authorization': 'Bearer ' + token
+        },
+        success: function (gig) {
+          $('#loadingSpinner').remove();
+
+          const imagePath = gig.gig_image_url?.startsWith("http")
+            ? gig.gig_image_url
+            : (gig.gig_image_url ? BASE_URL + gig.gig_image_url : 'https://via.placeholder.com/1200x500?text=No+Image');
+
+          const createdAt = new Date(gig.created_at).toLocaleDateString();
+
+          let parsedContent = "<em>No content available.</em>";
+          try {
+            if (typeof marked !== 'undefined') {
+              parsedContent = marked.parse(gig.content || "");
+            }
+          } catch (err) {
+            console.warn("Markdown parsing failed:", err);
+          }
+
+          const gigHtml = `
+            <div class="card shadow border-0">
+              <div class="card-body pb-0">
+                <div class="d-flex justify-content-between mb-2">
+                  <span class="text-uppercase fw-bold text-primary">${gig.category_name || 'Uncategorized'}</span>
+                  <span class="text-muted">${createdAt}</span>
+                </div>
+
+                <h2 class="fw-bold">${gig.title}</h2>
+                <p class="text-muted mb-3">by <strong>${gig.user_first_name && gig.user_last_name ? gig.user_first_name + ' ' + gig.user_last_name : 'Anonymous'}</strong></p>
+              </div>
+
+              <img src="${imagePath}" class="img-fluid rounded-3" alt="Gig Image" style="object-fit: cover; max-height: 400px;">
+
+              <div class="card-body mt-4">
+                <h5 class="fw-semibold">Description</h5>
+                <p>${gig.description}</p>
+
+                <hr>
+
+                <h5 class="fw-semibold">Gig Content</h5>
+                <div class="markdown-body mb-4">${parsedContent}</div>
+
+                <div class="mb-3">
+                  <span class="badge bg-${gig.status === 'open' ? 'success' : 'secondary'}">Status: ${gig.status || 'Open'}</span>
+                </div>
+
+                <div class="d-flex gap-3 mb-3">
+                  <button class="btn btn-primary px-4" id="applyBtn">Apply</button>
+                  <button class="btn btn-outline-danger px-4" id="favBtn">
+                    <i class="fas fa-heart me-1"></i> Favorite
+                  </button>
+                </div>
+
+                ${gig.tags ? `
+                  <div class="mt-3">
+                    ${gig.tags.split(',').map(tag => `<span class="badge bg-info text-dark me-2">${tag.trim()}</span>`).join('')}
+                  </div>` : ''}
+              </div>
+            </div>
+          `;
+
+          $container.html(gigHtml);
+
+          // Button click stubs
+          $('#applyBtn').on('click', function () {
+            toastr.info("Apply functionality not implemented yet.");
+          });
+
+          $('#favBtn').on('click', function () {
+            toastr.info("Added to favorites!");
+          });
+        },
+        error: function (xhr) {
+          console.error("Error loading gig:", xhr.responseText);
+          $container.html(`<div class="alert alert-danger">Error loading gig: ${xhr.responseText}</div>`);
+        }
+      });
+    }
+
+    return {
+      init: function () {
+        if (isSingleGigRoute(window.location.hash)) render();
+        $(window).off(".singleGig").on("hashchange.singleGig", function () {
+          if (isSingleGigRoute(window.location.hash)) render();
+        });
+      },
+      render
+    };
+  })();
+
+  $(document).ready(function () {
+    SingleGig.init();
   });
-});
+}

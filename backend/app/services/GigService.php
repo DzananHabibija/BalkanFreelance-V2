@@ -42,12 +42,19 @@ Class GigService
     return $this->dao->getAll($excludeUserId);
     }
 
-    public function updateGig($id, $title, $price, $status) {
-        return $this->dao->updateGig($id, $title, $price, $status);
-    }
+   public function updateGig($id, $title, $price, $status, $gig_image_url = null) {
+    return $this->dao->updateGig($id, $title, $price, $status, $gig_image_url);
+}
+
 
     public function getAllWithFilters(array $filters) {
         return $this->dao->getAllWithFilters($filters);
     }
+
+    public function getGigByIdWithUser($gigId)
+        {
+            return $this->dao->getGigByIdWithUser($gigId);
+        }
+
 
 }

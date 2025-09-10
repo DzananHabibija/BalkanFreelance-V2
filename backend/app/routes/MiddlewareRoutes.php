@@ -38,13 +38,7 @@ Flight::route('/*', function () {
         Flight::set('user', (array)$decoded->user);
         Flight::set('jwt_token', $jwt);
 
-        // Debug info
-        file_put_contents('debug_user.txt', json_encode([
-            'token' => $jwt,
-            'decoded' => (array)$decoded->user,
-            'route' => $current_route,
-            'timestamp' => date('c')
-        ], JSON_PRETTY_PRINT) . "\n\n", FILE_APPEND);
+        
 
         return true;
     } catch (\Exception $e) {

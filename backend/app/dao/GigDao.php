@@ -78,20 +78,54 @@ Class GigDao{
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
      }
 
+     public function getGigByIdWithUser($gigId)
+        {
+            $stmt = $this->conn->prepare("
+                SELECT 
+                    g.*, 
+                    u.first_name AS user_first_name, 
+                    u.last_name AS user_last_name,
+                    c.name AS category_name
+                FROM gigs g
+                JOIN users u ON g.user_id = u.id
+                LEFT JOIN categories c ON g.category_id = c.id
+                WHERE g.id = ?
+                LIMIT 1
+            ");
+            $stmt->execute([$gigId]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        }
 
-     public function updateGig($id, $title, $price, $status) {
-        $stmt = $this->conn->prepare("UPDATE gigs SET title = ?, price = ?, status = ? WHERE id = ?");
-        $stmt->execute([$title, $price, $status, $id]);
 
-        $stmt = $this->conn->prepare("SELECT * FROM gigs WHERE id = ?");
-        $stmt->execute([$id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
+
+    public function updateGig($id, $title, $price, $status, $gig_image_url = null) {
+    $sql = "UPDATE gigs SET
+                title = :title,
+                price = :price,
+                status = :status,
+                gig_image_url = :gig_image_url
+            WHERE id = :id";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->execute([
+        ':title' => $title,
+        ':price' => $price,
+        ':status' => $status,
+        ':gig_image_url' => $gig_image_url,
+        ':id' => $id
+    ]);
+
+    $stmt = $this->conn->prepare("SELECT * FROM gigs WHERE id = ?");
+    $stmt->execute([$id]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
 
     public function getAllWithFilters(array $f) {
-        $sql = "SELECT id, title, description, price, category_id, created_at, user_id
-                FROM gigs
-                WHERE 1=1";
+        $sql = "SELECT id, title, description, price, category_id, created_at, user_id, gig_image_url
+        FROM gigs
+        WHERE 1=1";
+
         $params = [];
 
         if (!empty($f['exclude_user'])) {
@@ -160,7 +194,8 @@ Class GigDao{
                 description = :description,
                 tags = :tags,
                 price = :price,
-                status = :status
+                status = :status,
+                gig_image_url = :gig_image_url
             WHERE id = :id";
     
     $stmt = $this->conn->prepare($sql);
@@ -170,10 +205,12 @@ Class GigDao{
         ':tags' => $data['tags'],
         ':price' => $data['price'],
         ':status' => $data['status'],
+        ':gig_image_url' => $data['gig_image_url'] ?? null,
         ':id' => $data['id']
     ]);
 
     return $this->get_gig_by_id($data['id']);
 }
+
 
 }
