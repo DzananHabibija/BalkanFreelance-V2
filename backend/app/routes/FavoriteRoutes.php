@@ -31,19 +31,6 @@ Flight::route('GET /favorites/@user_id', function ($id) {
 });
 
 
-
-Flight::route('POST /favorites/add', function () {
-
-    $service = Flight::get("favorite_service");
-
-    $user_id = $_POST['user_id'];
-    $gig_id = $_POST['gig_id'];
-
-    $service->add_favorite($user_id, $gig_id);
-
-    Flight::json(["message" => "Added to favorites!"]);
-});
-
 Flight::route('POST /favorites/add', function () {
 
     $service = Flight::get("favorite_service");
