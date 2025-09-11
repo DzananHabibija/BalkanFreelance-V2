@@ -27,7 +27,8 @@ Class FavoriteDao{
     }
 
             public function add_favorite($user_id, $gig_id) {
-                return $this->insert('favorites',$user_id, $gig_id);
+                $data = ['user_id' => $user_id, 'gig_id'  => $gig_id];
+                return $this->insert('favorites', $data);
             }
 
             public function remove_favorite($user_id, $gig_id) {
@@ -43,7 +44,7 @@ Class FavoriteDao{
                 $stmt = $this->conn->prepare($query);
                 $stmt->bindParam(":user_id", $user_id);
                 $stmt->execute();
-                return $stmt->fetch(PDO::FETCH_ASSOC);
+                return $stmt->fetchAll(PDO::FETCH_ASSOC);
             }
 
             public function insert($table, $entity) {
