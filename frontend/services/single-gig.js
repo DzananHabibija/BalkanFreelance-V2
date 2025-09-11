@@ -109,10 +109,75 @@ if (typeof SingleGig === 'undefined') {
 
           $container.html(gigHtml);
 
-          // Button click stubs
-          $('#applyBtn').on('click', function () {
-            toastr.info("Apply functionality not implemented yet.");
+          // Enhanced Apply Button Logic
+        const currentUser = JSON.parse(localStorage.getItem("user"));
+        const $applyBtn = $('#applyBtn');
+
+      if (currentUser && currentUser.id === gig.user_id) {
+        // Hide apply button for gig owner
+        $applyBtn.remove();
+      } else if (currentUser) {
+        // Check application status for current user
+        $.ajax({
+          url: `${BASE_URL}/backend/gigs/${gig.id}/application-status/${currentUser.id}`,
+          type: "GET",
+          headers: { Authorization: "Bearer " + token },
+          success: function (res) {
+            const status = res?.status;
+
+      if (status === "approved") {
+        $applyBtn
+          .addClass("btn-success")
+          .removeClass("btn-primary")
+          .html('<i class="fas fa-check-circle me-1"></i> Approved – Contact Owner')
+          .prop("disabled", true);
+      } else if (status === "pending") {
+        $applyBtn
+          .addClass("btn-warning")
+          .removeClass("btn-primary")
+          .text("Applied – Pending")
+          .prop("disabled", true);
+      } else if (status === "rejected") {
+        $applyBtn
+          .addClass("btn-secondary")
+          .removeClass("btn-primary")
+          .text("Application Rejected")
+          .prop("disabled", true);
+      } else {
+        // Not applied yet → enable click to apply
+        $applyBtn.on('click', function () {
+          $.ajax({
+            url: `${BASE_URL}/backend/gigs/${gig.id}/apply`,
+            type: "POST",
+            headers: { Authorization: "Bearer " + token },
+            contentType: "application/json",
+            data: JSON.stringify({ user_id: currentUser.id, cover_letter: "" }),
+            success: function () {
+              toastr.success("Application submitted!");
+              $applyBtn
+                .addClass("btn-warning")
+                .removeClass("btn-primary")
+                .text("Applied – Pending")
+                .prop("disabled", true);
+            },
+            error: function (xhr) {
+              toastr.error("Failed to apply: " + xhr.responseText);
+            }
           });
+              });
+            }
+          },
+          error: function () {
+            toastr.error("Could not check application status.");
+          }
+        });
+      } else {
+        $applyBtn.on('click', function () {
+          toastr.warning("Please log in to apply.");
+        });
+      }
+
+
 
           $('#favBtn').on('click', function () {
             toastr.info("Added to favorites!");

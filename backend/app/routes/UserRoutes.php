@@ -299,6 +299,7 @@ Flight::route('GET /google-callback', function () {
     Flight::redirect($baseFrontendUrl . "?jwt=" . urlencode($jwt));
 });
 
+
 Flight::route('GET /user/@id/balance', function($id){
     $userService = Flight::get("user_service");
     $balance = $userService->getBalance($id);
@@ -340,5 +341,12 @@ Flight::route('POST /top-up', function () {
     } catch (Exception $e) {
         Flight::json(["error" => "Invalid or expired token: " . $e->getMessage()], 401);
     }
+});
+
+Flight::route('PUT /users/@id/phone', function($id) {
+    $data = Flight::request()->data->getData();
+    $service = Flight::get('user_service');
+    $service->update_phone($id, $data['phone_number']);
+    Flight::json(['message' => 'Phone updated']);
 });
 

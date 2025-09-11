@@ -220,3 +220,45 @@ Flight::route('GET /gigs/full/@id', function($id){
     Flight::json($service->getGigByIdWithUser($id));
 });
 
+Flight::route('POST /gigs/@id/apply', function ($gig_id) {
+    $data = Flight::request()->data->getData();
+    $user_id = $data['user_id'];
+    $cover_letter = $data['cover_letter'] ?? '';
+
+    $service = Flight::get('gig_service');
+    $service->apply_to_gig($gig_id, $user_id, $cover_letter);
+
+    Flight::json(['message' => 'Application submitted']);
+});
+
+Flight::route('GET /gigs/@id/applications', function ($gig_id) {
+    $service = Flight::get("gig_service");
+    $applications = $service->get_applications_for_gig($gig_id);
+    Flight::json($applications);
+});
+
+Flight::route('POST /gigs/@gig_id/approve/@user_id', function ($gig_id, $user_id) {
+    $service = Flight::get("gig_service");
+    $service->approve_applicant($gig_id, $user_id);
+    Flight::json(['message' => 'Applicant approved']);
+});
+
+Flight::route('GET /gigs/@gig_id/application-status/@user_id', function ($gig_id, $user_id) {
+    $service = Flight::get("gig_service");
+    $status = $service->get_application_status($gig_id, $user_id);
+    Flight::json($status);
+});
+
+Flight::route('POST /gigs/@gig_id/pay/@freelancer_id', function ($gig_id, $freelancer_id) {
+    $data = Flight::request()->data->getData();
+    $payer_id = $data['payer_id']; // ID of the gig owner
+    $service = Flight::get("gig_service");
+
+    $result = $service->pay_freelancer($gig_id, $payer_id, $freelancer_id);
+
+    if ($result['success']) {
+        Flight::json(['message' => 'Payment successful']);
+    } else {
+        Flight::halt(400, $result['error']);
+    }
+});

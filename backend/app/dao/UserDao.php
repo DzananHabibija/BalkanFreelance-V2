@@ -73,17 +73,6 @@ class UserDao{
       return $stmt->fetchAll(PDO::FETCH_ASSOC);
   }
 
-    public function getBalance($userId) {
-        $stmt = $this->conn->prepare("SELECT balance FROM users WHERE id = ?");
-        $stmt->execute([$userId]);
-        return $stmt->fetchColumn();
-      }
-
-    public function increaseBalance($userId, $amount) {
-        $stmt = $this->conn->prepare("UPDATE users SET balance = balance + ? WHERE id = ?");
-        return $stmt->execute([$amount, $userId]);
-      }
-
   public function update_user($data) {
     $sql = "UPDATE users SET 
                 first_name = :first_name,
@@ -92,8 +81,10 @@ class UserDao{
                 country_id = :country_id,
                 bio = :bio,
                 balance = :balance,
-                isAdmin = :isAdmin
+                isAdmin = :isAdmin,
+                phone_number = :phone_number
             WHERE id = :id";
+
     $stmt = $this->conn->prepare($sql);
     $stmt->execute([
         ':first_name' => $data['first_name'],
@@ -103,10 +94,12 @@ class UserDao{
         ':bio' => $data['bio'],
         ':balance' => $data['balance'],
         ':isAdmin' => $data['isAdmin'],
+        ':phone_number' => $data['phone_number'],
         ':id' => $data['id']
     ]);
     return $this->get_user_by_id($data['id']);
 }
+
 
 
   
@@ -132,7 +125,7 @@ class UserDao{
     }
 
     public function getById($id) {
-        $stmt = $this->conn->prepare("SELECT id, first_name, last_name, email, bio, profile_image FROM users WHERE id = ?");
+        $stmt = $this->conn->prepare("SELECT id, first_name, last_name, email, bio, phone_number, profile_image FROM users WHERE id = ?");
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
@@ -162,6 +155,30 @@ class UserDao{
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+
+    public function getBalance($userId) {
+        $stmt = $this->conn->prepare("SELECT balance FROM users WHERE id = ?");
+        $stmt->execute([$userId]);
+        return $stmt->fetchColumn();
+      }
+
+    public function increaseBalance($userId, $amount) {
+        $stmt = $this->conn->prepare("UPDATE users SET balance = balance + ? WHERE id = ?");
+        return $stmt->execute([$amount, $userId]);
+      }
+
+      public function update_phone($id, $phone_number) {
+    $stmt = $this->conn->prepare("UPDATE users SET phone_number = :phone_number WHERE id = :id");
+    $stmt->bindParam(':phone_number', $phone_number);
+    $stmt->bindParam(':id', $id);
+    $stmt->execute();
+
+    $stmt = $this->conn->prepare("SELECT id, first_name, last_name, email, phone_number FROM users WHERE id = ?");
+    $stmt->execute([$id]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+
 
 
 
@@ -195,9 +212,11 @@ class UserDao{
 
         // Only keep allowed fields for BalkanFreelance
         $allowedFields = [
-            'first_name', 'last_name', 'email', 'password',
-            'country_id', 'profile_image', 'bio', 'balance', 'isAdmin'
+          'first_name', 'last_name', 'email', 'password',
+          'country_id', 'profile_image', 'bio', 'balance', 'isAdmin',
+          'phone_number' 
         ];
+
 
         // Filter input data to include only allowed fields
         $filteredData = array_filter(

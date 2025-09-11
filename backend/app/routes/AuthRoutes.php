@@ -82,7 +82,8 @@ Flight::route('POST /auth/login', function() {
  *             @OA\Property(property="last_name", type="string"),
  *             @OA\Property(property="email", type="string"),
  *             @OA\Property(property="password", type="string"),
- *             @OA\Property(property="country_id", type="integer")
+ *             @OA\Property(property="country_id", type="integer"),
+ *             @OA\Property(property="phone_number", type="string", example="+38761111222")
  *         )
  *     ),
  *     @OA\Response(response=200, description="User registered")
@@ -91,12 +92,17 @@ Flight::route('POST /auth/login', function() {
 Flight::route('POST /auth/register', function() {
     $data = Flight::request()->data->getData();
 
-    $required_fields = ['first_name','last_name', 'email', 'password', 'country_id'];
+    $required_fields = ['first_name','last_name', 'email', 'password', 'country_id', 'phone_number'];
     foreach ($required_fields as $field) {
         if (empty($data[$field])) {
             Flight::halt(400, "Missing field: $field");
         }
     }
+
+    if (!preg_match('/^\+?[0-9\s\-()]{6,20}$/', $data['phone_number'])) {
+        Flight::halt(400, "Invalid phone number format.");
+    }   
+
 
     if (mb_strlen($data['first_name']) <= 1) {
         Flight::halt(400, "Please provide a longer first name.");

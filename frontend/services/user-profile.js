@@ -19,13 +19,19 @@ function loadUserProfile(userId) {
 
       $("#user-info").html(`
         <p><strong>Name:</strong> ${user.first_name} ${user.last_name}</p>
-      <p><strong>Email:</strong> ${user.email}</p>
-      <p><strong>Balance:</strong> $<span id="userBalance">0.00</span></p>
-      ${bioHtml}
-      <div id="bio-controls">${bioControls}</div>
+        <p><strong>Email:</strong> ${user.email}</p>
+        <p><strong>Phone:</strong> <span id="phone-display">${user.phone_number || "Not provided"}</span></p>
+        <p><strong>Balance:</strong> $<span id="userBalance">0.00</span></p>
+        ${bioHtml}
+        <div id="bio-controls">${bioControls}</div>
+        ${currentUser && parseInt(currentUser.id) === parseInt(user.id) ? `
+          <button class="btn btn-sm btn-outline-primary" onclick="enablePhoneEdit('${user.phone_number || ""}', ${user.id})">Change Phone</button>
+        ` : ""}
       `);
 
+
       loadUserBalance(user.id);
+
 
       if (!gigs.length) {
         $("#user-gigs").html(`<p class="text-muted">No gigs created by this user.</p>`);
@@ -45,12 +51,17 @@ function loadUserProfile(userId) {
 
         if (currentUser && parseInt(currentUser.id) === parseInt(gig.user_id)) {
           html += `
-            <div class="mt-2">
+            <div class="mt-2 mb-2">
               <button class="btn btn-sm btn-warning me-2" onclick="openEditGigModal(${gig.id}, '${gig.title}', ${gig.price}, '${gig.status}')">Edit</button>
               <button class="btn btn-sm btn-danger" onclick="deleteGig(${gig.id})">Delete</button>
             </div>
+            <div class="border-top pt-2" id="applications-${gig.id}">
+              <div class="text-muted small">Loading applications...</div>
+            </div>
           `;
+          setTimeout(() => loadApplicationsForGig(gig.id, $(`#applications-${gig.id}`)), 0);
         }
+
 
         html += `</div></div></div>`;
         return html;
@@ -150,6 +161,105 @@ function loadUserBalance(userId) {
     },
     error: function () {
       $("#userBalance").text("0.00");
+    }
+  });
+}
+
+
+function loadApplicationsForGig(gigId, container) {
+  const token = localStorage.getItem("jwt")?.replace(/"/g, "");
+  $.ajax({
+    url: `${API_BASE}/gigs/${gigId}/applications`,
+    type: "GET",
+    headers: { Authorization: "Bearer " + token },
+    success: function (apps) {
+      if (!apps.length) {
+        container.append(`<p class="text-muted">No applications yet.</p>`);
+        return;
+      }
+
+      const html = apps.map(app => `
+        <div class="border p-2 mb-2 rounded">
+          <p><strong>${app.first_name} ${app.last_name}</strong> (${app.email})</p>
+          <p class="mb-1"><em>${app.cover_letter || "No cover letter"}</em></p>
+          <span class="badge bg-${
+            app.status === "approved" ? "success" : app.status === "rejected" ? "danger" : "secondary"
+          }">${app.status}</span>
+          ${app.status === "pending" ? 
+            `<button class="btn btn-sm btn-primary ms-2" onclick="approveApplicant(${gigId}, ${app.user_id})">Approve</button>` 
+            : ""}
+          ${app.status === "approved" ? 
+            `<button class="btn btn-sm btn-success ms-2" onclick="payFreelancer(${gigId}, ${app.user_id})">Pay</button>` 
+            : ""}
+        </div>
+      `).join("");
+
+      container.append(html);
+    },
+    error: function () {
+      container.append(`<p class="text-danger">Failed to load applications.</p>`);
+    }
+  });
+}
+
+function approveApplicant(gigId, userId) {
+  const token = localStorage.getItem("jwt")?.replace(/"/g, "");
+  $.ajax({
+    url: `${API_BASE}/gigs/${gigId}/approve/${userId}`,
+    type: "POST",
+    headers: { Authorization: "Bearer " + token },
+    success: function () {
+      toastr.success("Applicant approved!");
+      location.reload();
+    },
+    error: function (xhr) {
+      toastr.error("Failed to approve: " + xhr.responseText);
+    }
+  });
+}
+
+function payFreelancer(gigId, userId) {
+  const token = localStorage.getItem("jwt")?.replace(/"/g, "");
+  const currentUser = JSON.parse(localStorage.getItem("user"));
+  $.ajax({
+    url: `${API_BASE}/gigs/${gigId}/pay/${userId}`,
+    type: "POST",
+    headers: { Authorization: "Bearer " + token },
+    contentType: "application/json",
+    data: JSON.stringify({ payer_id: currentUser.id }),
+    success: function () {
+      toastr.success("Payment successful!");
+      location.reload();
+    },
+    error: function (xhr) {
+      toastr.error("Payment failed: " + xhr.responseText);
+    }
+  });
+}
+
+function enablePhoneEdit(currentPhone, userId) {
+  $("#phone-display").replaceWith(`
+    <div id="phone-edit">
+      <input id="phone-input" class="form-control form-control-sm mb-2" value="${currentPhone}">
+      <button class="btn btn-sm btn-success me-2" onclick="savePhone(${userId})">Save</button>
+      <button class="btn btn-sm btn-secondary" onclick="location.reload()">Cancel</button>
+    </div>
+  `);
+}
+
+function savePhone(userId) {
+  const newPhone = $("#phone-input").val();
+  $.ajax({
+    url: `${API_BASE}/users/${userId}/phone`,
+    type: "PUT",
+    contentType: "application/json",
+    data: JSON.stringify({ phone_number: newPhone }),
+    success: function () {
+      toastr.success("Phone updated successfully");
+      location.reload();
+    },
+    error: function () {
+      toastr.error("Failed to update phone. Please try again.");
     }
   });
 }

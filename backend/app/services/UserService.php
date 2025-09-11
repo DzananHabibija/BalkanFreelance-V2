@@ -70,13 +70,19 @@ class UserService
          return $this->dao;
     }
 
-       public function getBalance($userId) {
+    public function getBalance($userId) {
         return $this->dao->getBalance($userId);
     }
 
     public function increaseBalance($userId, $amount) {
         return $this->dao->increaseBalance($userId, $amount);
     }
+
+    public function update_phone($id, $phone_number) {
+        return $this->dao->update_phone($id, $phone_number);
+    }
+
+
 
 
 

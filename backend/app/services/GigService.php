@@ -57,4 +57,56 @@ Class GigService
         }
 
 
+    public function apply_to_gig($gig_id, $user_id, $cover_letter) {
+        return $this->dao->apply_to_gig($gig_id, $user_id, $cover_letter);
+    }
+
+    public function get_applications_for_gig($gig_id) {
+        return $this->dao->get_applications_for_gig($gig_id);
+    }
+
+    public function approve_applicant($gig_id, $user_id) {
+        return $this->dao->approve_applicant($gig_id, $user_id);
+    }
+
+    public function get_application_status($gig_id, $user_id) {
+        return $this->dao->get_application_status($gig_id, $user_id);
+    }
+
+    public function pay_freelancer($gig_id, $payer_id, $freelancer_id) {
+        $gig = $this->dao->get_gig_by_id($gig_id);
+
+        if (!$gig) {
+            return ['success' => false, 'error' => 'Gig not found'];
+        }
+
+        $amount = $gig['price'];
+
+        
+        $payer_balance = $this->dao->get_user_balance($payer_id);
+        $freelancer_balance = $this->dao->get_user_balance($freelancer_id);
+
+        if ($payer_balance < $amount) {
+            return ['success' => false, 'error' => 'Insufficient funds'];
+        }
+
+        
+        $this->dao->update_user_balance($payer_id, $payer_balance - $amount);
+        $this->dao->update_user_balance($freelancer_id, $freelancer_balance + $amount);
+
+        
+        $this->dao->record_transaction([
+            'sender_id' => $payer_id,
+            'receiver_id' => $freelancer_id,
+            'gig_id' => $gig_id,
+            'amount' => $amount,
+            'status' => 'completed',
+            'transaction_date' => date('Y-m-d H:i:s')
+        ]);
+
+        return ['success' => true];
+    }
+
+
+
 }

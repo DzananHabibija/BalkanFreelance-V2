@@ -30,7 +30,7 @@ $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 }
 
 public function get_user_by_email($email){
-    $query = "SELECT id,email,password FROM users WHERE email = :email";
+    $query = "SELECT id,email,password, phone_number, first_name, last_name FROM users WHERE email = :email";
     $stmt = $this->conn->prepare ($query);
     $stmt->bindParam(':email', $email);
     $stmt->execute();

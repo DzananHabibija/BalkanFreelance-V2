@@ -7,8 +7,9 @@ $(document).ready(function() {
         var password = $('#password').val();
         var repeatPassword = $('#repeatPassword').val();
         var countryId = $('#countrySelect').val();
+        var phoneNumber = $('#phoneNumber').val().trim();
 
-        if (!firstName || !lastName || !email || !password || !repeatPassword || !countryId) {
+        if (!firstName || !lastName || !email || !password || !repeatPassword || !countryId || !phoneNumber) {
             alert('Please fill in all fields!');
             return;
         }
@@ -27,7 +28,8 @@ $(document).ready(function() {
                 last_name: lastName,
                 email: email,
                 password: password,
-                country_id: countryId
+                country_id: countryId,
+                phone_number: phoneNumber
             }),
             success: function(response) {
                 alert('Registration successful!');

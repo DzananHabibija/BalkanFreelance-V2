@@ -165,6 +165,105 @@ Class GigDao{
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
       }
 
+      public function apply_to_gig($gig_id, $user_id, $cover_letter) {
+        $sql = "INSERT INTO applications (user_id, gig_id, cover_letter, status, applied_at)
+                VALUES (:user_id, :gig_id, :cover_letter, 'pending', NOW())";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([
+            ':user_id' => $user_id,
+            ':gig_id' => $gig_id,
+            ':cover_letter' => $cover_letter
+        ]);
+        
+        return true;
+     }
+
+     public function get_applications_for_gig($gig_id) {
+        $sql = "SELECT 
+                    a.id as application_id,
+                    a.user_id,
+                    a.cover_letter,
+                    a.status,
+                    a.applied_at,
+                    u.first_name,
+                    u.last_name,
+                    u.email,
+                    u.phone_number
+                FROM applications a
+                JOIN users u ON a.user_id = u.id
+                WHERE a.gig_id = :gig_id";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':gig_id' => $gig_id]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function approve_applicant($gig_id, $user_id) {
+        
+        $sql = "UPDATE applications
+                SET status = CASE
+                    WHEN user_id = :user_id THEN 'approved'
+                    ELSE 'rejected'
+                END
+                WHERE gig_id = :gig_id";
+
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            ':user_id' => $user_id,
+            ':gig_id' => $gig_id
+        ]);
+    }
+
+    public function get_application_status($gig_id, $user_id) {
+        $sql = "SELECT status
+                FROM applications
+                WHERE gig_id = :gig_id AND user_id = :user_id
+                LIMIT 1";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([
+            ':gig_id' => $gig_id,
+            ':user_id' => $user_id
+        ]);
+
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function get_user_balance($user_id) {
+        $sql = "SELECT balance FROM users WHERE id = :user_id";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':user_id' => $user_id]);
+
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result ? floatval($result['balance']) : 0.00;
+    }
+
+    public function update_user_balance($user_id, $new_balance) {
+        $sql = "UPDATE users SET balance = :balance WHERE id = :user_id";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            ':balance' => $new_balance,
+            ':user_id' => $user_id
+        ]);
+    }
+
+
+    public function record_transaction($data) {
+        $sql = "INSERT INTO transactions (sender_id, receiver_id, gig_id, amount, status, transaction_date)
+                VALUES (:sender_id, :receiver_id, :gig_id, :amount, :status, :transaction_date)";
+
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            ':sender_id' => $data['sender_id'],
+            ':receiver_id' => $data['receiver_id'],
+            ':gig_id' => $data['gig_id'],
+            ':amount' => $data['amount'],
+            ':status' => $data['status'],
+            ':transaction_date' => $data['transaction_date']
+        ]);
+    }
+
       
 
         public function insert($table, $entity)
