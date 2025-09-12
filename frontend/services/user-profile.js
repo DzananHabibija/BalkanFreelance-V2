@@ -263,3 +263,72 @@ function savePhone(userId) {
     }
   });
 }
+
+const currentUser = JSON.parse(localStorage.getItem("user"));
+const token = localStorage.getItem("jwt")?.replace(/"/g, "");
+function loadFavorites(userId) {
+  $.ajax({
+    url: `${API_BASE}/favorites/${userId}`,
+    method: "GET",
+    dataType: "json",
+    success: function (favorites) {
+      if (!favorites.length) {
+        $("#user-favorites").html(`<p class="text-muted">No favorite gigs yet.</p>`);
+        return;
+      }
+
+      const currentUser = JSON.parse(localStorage.getItem("user"));
+
+      const favHtml = favorites.map(gig => {
+        let html = `
+          <div class="col-md-4 mb-3">
+            <div class="card h-100 shadow-sm border-primary">
+              <div class="card-body">
+                <h5 class="card-title text-primary">${gig.title}</h5>
+                <p><strong>Price:</strong> $${gig.price}</p>
+                <p><strong>Status:</strong> ${gig.status}</p>
+                <p><small class="text-muted">Created: ${gig.created_at}</small></p>
+                <button class="btn btn-sm btn-outline-danger" onclick="removeFavorite(${currentUser.id}, ${gig.id})">
+                  Remove Favorite
+                </button>
+        `;
+
+        if (currentUser && parseInt(currentUser.id) === parseInt(gig.user_id)) {
+          html += `
+            <div class="mt-2 mb-2">
+              <button class="btn btn-sm btn-warning me-2" onclick="openEditGigModal(${gig.id}, '${gig.title}', ${gig.price}, '${gig.status}')">Edit</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteGig(${gig.id})">Delete</button>
+            </div>
+          `;
+        }
+
+        html += `</div></div></div>`;
+        return html;
+      }).join("");
+
+      $("#user-favorites").html(favHtml);
+    },
+    error: function () {
+      $("#user-favorites").html(`<div class="alert alert-danger">Failed to load favorites.</div>`);
+    }
+  });
+}
+
+function removeFavorite(userId, gigId) {
+  if (!confirm("Remove this gig from favorites?")) return;
+
+  $.ajax({
+    url: `${API_BASE}/favorites/delete/${currentUser.id}/${gigId}`,
+    type: "DELETE",
+    headers: { Authorization: "Bearer " + token },
+    success: function () {
+      toastr.success("Removed from favorites");
+      loadFavorites(userId);
+    },
+    error: function () {
+      toastr.error("Failed to remove favorite");
+    }
+  });
+}
+
+loadFavorites((currentUser.id));
