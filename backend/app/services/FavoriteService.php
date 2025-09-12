@@ -22,6 +22,8 @@ Class FavoriteService
     public function get_favorites($user_id) {
         return $this->dao->get_favorites($user_id);
     }
+
+    public function is_favorite($user_id, $gig_id) {
+        return $this->dao->is_favorite($user_id, $gig_id);
+    }
 }
-
-

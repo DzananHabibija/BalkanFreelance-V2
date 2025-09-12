@@ -251,14 +251,15 @@ Flight::route('GET /gigs/@gig_id/application-status/@user_id', function ($gig_id
 
 Flight::route('POST /gigs/@gig_id/pay/@freelancer_id', function ($gig_id, $freelancer_id) {
     $data = Flight::request()->data->getData();
-    $payer_id = $data['payer_id']; // ID of the gig owner
+    $payer_id = $data['payer_id'];
     $service = Flight::get("gig_service");
 
     $result = $service->pay_freelancer($gig_id, $payer_id, $freelancer_id);
 
     if ($result['success']) {
-        Flight::json(['message' => 'Payment successful']);
+        Flight::json(['message' => 'Payment successful', 'paid' => true]);
     } else {
         Flight::halt(400, $result['error']);
     }
 });
+

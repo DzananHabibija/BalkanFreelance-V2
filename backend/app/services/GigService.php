@@ -75,14 +75,12 @@ Class GigService
 
     public function pay_freelancer($gig_id, $payer_id, $freelancer_id) {
         $gig = $this->dao->get_gig_by_id($gig_id);
-
         if (!$gig) {
             return ['success' => false, 'error' => 'Gig not found'];
         }
 
         $amount = $gig['price'];
 
-        
         $payer_balance = $this->dao->get_user_balance($payer_id);
         $freelancer_balance = $this->dao->get_user_balance($freelancer_id);
 
@@ -90,11 +88,9 @@ Class GigService
             return ['success' => false, 'error' => 'Insufficient funds'];
         }
 
-        
         $this->dao->update_user_balance($payer_id, $payer_balance - $amount);
         $this->dao->update_user_balance($freelancer_id, $freelancer_balance + $amount);
 
-        
         $this->dao->record_transaction([
             'sender_id' => $payer_id,
             'receiver_id' => $freelancer_id,
@@ -104,8 +100,11 @@ Class GigService
             'transaction_date' => date('Y-m-d H:i:s')
         ]);
 
+        $this->dao->mark_application_paid($gig_id, $freelancer_id);
+
         return ['success' => true];
     }
+
 
 
 

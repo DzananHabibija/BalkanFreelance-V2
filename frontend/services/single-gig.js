@@ -40,13 +40,12 @@ if (typeof SingleGig === 'undefined') {
       }
 
       const token = localStorage.getItem("jwt")?.replace(/"/g, "");
+      const currentUser = JSON.parse(localStorage.getItem("user"));
 
       $.ajax({
         url: `${BASE_URL}/backend/gigs/full/${gigId}`,
         type: 'GET',
-        headers: {
-          'Authorization': 'Bearer ' + token
-        },
+        headers: { 'Authorization': 'Bearer ' + token },
         success: function (gig) {
           $('#loadingSpinner').remove();
 
@@ -95,7 +94,7 @@ if (typeof SingleGig === 'undefined') {
                 <div class="d-flex gap-3 mb-3">
                   <button class="btn btn-primary px-4" id="applyBtn">Apply</button>
                   <button class="btn btn-outline-danger px-4" id="favBtn">
-                    <i class="fas fa-heart me-1"></i> Favorite
+                    <i class="fas fa-heart me-1"></i> Add to Favorites
                   </button>
                 </div>
 
@@ -109,79 +108,129 @@ if (typeof SingleGig === 'undefined') {
 
           $container.html(gigHtml);
 
-          // Enhanced Apply Button Logic
-        const currentUser = JSON.parse(localStorage.getItem("user"));
-        const $applyBtn = $('#applyBtn');
+         
+          const $applyBtn = $('#applyBtn');
 
-      if (currentUser && currentUser.id === gig.user_id) {
-        // Hide apply button for gig owner
-        $applyBtn.remove();
-      } else if (currentUser) {
-        // Check application status for current user
-        $.ajax({
-          url: `${BASE_URL}/backend/gigs/${gig.id}/application-status/${currentUser.id}`,
-          type: "GET",
-          headers: { Authorization: "Bearer " + token },
-          success: function (res) {
-            const status = res?.status;
+          if (currentUser && currentUser.id === gig.user_id) {
+            $applyBtn.remove(); 
+          } else if (currentUser) {
+            $.ajax({
+              url: `${BASE_URL}/backend/gigs/${gig.id}/application-status/${currentUser.id}`,
+              type: "GET",
+              headers: { Authorization: "Bearer " + token },
+              success: function (res) {
+                const status = res?.status;
 
-      if (status === "approved") {
-        $applyBtn
-          .addClass("btn-success")
-          .removeClass("btn-primary")
-          .html('<i class="fas fa-check-circle me-1"></i> Approved – Contact Owner')
-          .prop("disabled", true);
-      } else if (status === "pending") {
-        $applyBtn
-          .addClass("btn-warning")
-          .removeClass("btn-primary")
-          .text("Applied – Pending")
-          .prop("disabled", true);
-      } else if (status === "rejected") {
-        $applyBtn
-          .addClass("btn-secondary")
-          .removeClass("btn-primary")
-          .text("Application Rejected")
-          .prop("disabled", true);
-      } else {
-        // Not applied yet → enable click to apply
-        $applyBtn.on('click', function () {
-          $.ajax({
-            url: `${BASE_URL}/backend/gigs/${gig.id}/apply`,
-            type: "POST",
-            headers: { Authorization: "Bearer " + token },
-            contentType: "application/json",
-            data: JSON.stringify({ user_id: currentUser.id, cover_letter: "" }),
-            success: function () {
-              toastr.success("Application submitted!");
-              $applyBtn
-                .addClass("btn-warning")
-                .removeClass("btn-primary")
-                .text("Applied – Pending")
-                .prop("disabled", true);
-            },
-            error: function (xhr) {
-              toastr.error("Failed to apply: " + xhr.responseText);
-            }
-          });
-              });
-            }
-          },
-          error: function () {
-            toastr.error("Could not check application status.");
+                if (status === "approved") {
+                  $applyBtn.addClass("btn-success").removeClass("btn-primary")
+                    .html('<i class="fas fa-check-circle me-1"></i> Approved – Contact Owner')
+                    .prop("disabled", true);
+
+                  const contactHtml = `
+                    <div class="alert alert-info mt-3">
+                      <strong>Owner Contact:</strong><br>
+                      Email: <a href="mailto:${gig.user_email}">${gig.user_email}</a><br>
+                      Phone: ${gig.user_phone || 'Not provided'}
+                    </div>`;
+                  $(".card-body.mt-4").append(contactHtml);
+
+                } else if (status === "pending") {
+                  $applyBtn.addClass("btn-warning").removeClass("btn-primary")
+                    .text("Applied – Pending").prop("disabled", true);
+                } else if (status === "rejected") {
+                  $applyBtn.addClass("btn-secondary").removeClass("btn-primary")
+                    .text("Application Rejected").prop("disabled", true);
+                } else {
+                  $applyBtn.on('click', function () {
+                    $.ajax({
+                      url: `${BASE_URL}/backend/gigs/${gig.id}/apply`,
+                      type: "POST",
+                      headers: { Authorization: "Bearer " + token },
+                      contentType: "application/json",
+                      data: JSON.stringify({ user_id: currentUser.id, cover_letter: "" }),
+                      success: function () {
+                        toastr.success("Application submitted!");
+                        $applyBtn.addClass("btn-warning").removeClass("btn-primary")
+                          .text("Applied – Pending").prop("disabled", true);
+                      },
+                      error: function (xhr) {
+                        toastr.error("Failed to apply: " + xhr.responseText);
+                      }
+                    });
+                  });
+                }
+              },
+              error: function () {
+                toastr.error("Could not check application status.");
+              }
+            });
+          } else {
+            $applyBtn.on('click', function () {
+              toastr.warning("Please log in to apply.");
+            });
           }
-        });
-      } else {
-        $applyBtn.on('click', function () {
-          toastr.warning("Please log in to apply.");
-        });
-      }
 
+          const $favBtn = $('#favBtn');
 
+          if (currentUser) {
+            $.ajax({
+              url: `${BASE_URL}/backend/favorites/${currentUser.id}/${gig.id}`,
+              type: "GET",
+              headers: { Authorization: "Bearer " + token },
+              success: function (res) {
+                const isFav = res?.is_favorite;
+                if (isFav) {
+                  $favBtn.removeClass("btn-outline-danger").addClass("btn-danger")
+                    .html('<i class="fas fa-heart me-1"></i> Remove Favorite')
+                    .data("favorited", true);
+                } else {
+                  $favBtn.removeClass("btn-danger").addClass("btn-outline-danger")
+                    .html('<i class="fas fa-heart me-1"></i> Add to Favorites')
+                    .data("favorited", false);
+                }
+              }
+            });
 
-          $('#favBtn').on('click', function () {
-            toastr.info("Added to favorites!");
-          });
+            $favBtn.on('click', function () {
+              const favorited = $favBtn.data("favorited");
+              if (!favorited) {
+                $.ajax({
+                  url: `${BASE_URL}/backend/favorites/add`,
+                  type: "POST",
+                  headers: { Authorization: "Bearer " + token },
+                  data: { user_id: currentUser.id, gig_id: gig.id },
+                  success: function () {
+                    toastr.success("Added to favorites!");
+                    $favBtn.removeClass("btn-outline-danger").addClass("btn-danger")
+                      .html('<i class="fas fa-heart me-1"></i> Remove Favorite')
+                      .data("favorited", true);
+                  },
+                  error: function () {
+                    toastr.error("Failed to add to favorites.");
+                  }
+                });
+              } else {
+                $.ajax({
+                  url: `${BASE_URL}/backend/favorites/delete/${currentUser.id}/${gig.id}`,
+                  type: "DELETE",
+                  headers: { Authorization: "Bearer " + token },
+                  success: function () {
+                    toastr.info("Removed from favorites.");
+                    $favBtn.removeClass("btn-danger").addClass("btn-outline-danger")
+                      .html('<i class="fas fa-heart me-1"></i> Add to Favorites')
+                      .data("favorited", false);
+                  },
+                  error: function () {
+                    toastr.error("Failed to remove from favorites.");
+                  }
+                });
+              }
+            });
+          } else {
+            $favBtn.on('click', function () {
+              toastr.warning("Please log in to favorite gigs.");
+            });
+          }
         },
         error: function (xhr) {
           console.error("Error loading gig:", xhr.responseText);

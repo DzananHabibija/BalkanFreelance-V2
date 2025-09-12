@@ -40,9 +40,18 @@ Class FavoriteDao{
             }
 
             public function get_favorites($user_id) {
-                $query = "SELECT gig_id FROM favorites WHERE user_id = :user_id";
+                 $query = "SELECT g.* FROM favorites f JOIN gigs g ON f.gig_id = g.id WHERE f.user_id = :user_id";
                 $stmt = $this->conn->prepare($query);
                 $stmt->bindParam(":user_id", $user_id);
+                $stmt->execute();
+                return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
+
+            public function is_favorite($user_id, $gig_id) {
+                $query = "SELECT * FROM favorites WHERE user_id = :user_id AND gig_id = :gig_id";
+                $stmt = $this->conn->prepare($query);
+                $stmt->bindParam(":user_id", $user_id);
+                $stmt->bindParam(":gig_id", $gig_id);
                 $stmt->execute();
                 return $stmt->fetchAll(PDO::FETCH_ASSOC);
             }

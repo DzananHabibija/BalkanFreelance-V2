@@ -85,6 +85,8 @@ Class GigDao{
                     g.*, 
                     u.first_name AS user_first_name, 
                     u.last_name AS user_last_name,
+                    u.email AS user_email,
+                    u.phone_number AS user_phone,
                     c.name AS category_name
                 FROM gigs g
                 JOIN users u ON g.user_id = u.id
@@ -95,6 +97,7 @@ Class GigDao{
             $stmt->execute([$gigId]);
             return $stmt->fetch(PDO::FETCH_ASSOC);
         }
+
 
 
 
@@ -180,24 +183,26 @@ Class GigDao{
      }
 
      public function get_applications_for_gig($gig_id) {
-        $sql = "SELECT 
-                    a.id as application_id,
-                    a.user_id,
-                    a.cover_letter,
-                    a.status,
-                    a.applied_at,
-                    u.first_name,
-                    u.last_name,
-                    u.email,
-                    u.phone_number
-                FROM applications a
-                JOIN users u ON a.user_id = u.id
-                WHERE a.gig_id = :gig_id";
+    $sql = "SELECT 
+                a.id as application_id,
+                a.user_id,
+                a.cover_letter,
+                a.status,
+                a.paid,
+                a.applied_at,
+                u.first_name AS user_first_name,
+                u.last_name AS user_last_name,
+                u.email AS user_email,
+                u.phone_number AS user_phone
+            FROM applications a
+            JOIN users u ON a.user_id = u.id
+            WHERE a.gig_id = :gig_id";
 
-        $stmt = $this->conn->prepare($sql);
-        $stmt->execute([':gig_id' => $gig_id]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
+    $stmt = $this->conn->prepare($sql);
+    $stmt->execute([':gig_id' => $gig_id]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
 
     public function approve_applicant($gig_id, $user_id) {
         
@@ -247,6 +252,29 @@ Class GigDao{
             ':user_id' => $user_id
         ]);
     }
+
+    public function mark_application_paid($gig_id, $user_id) {
+        $sql = "UPDATE applications 
+                SET paid = 1 
+                WHERE gig_id = :gig_id AND user_id = :user_id";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            ':gig_id' => $gig_id,
+            ':user_id' => $user_id
+        ]);
+    }
+
+    public function is_application_paid($gig_id, $user_id) {
+        $sql = "SELECT paid FROM applications 
+                WHERE gig_id = :gig_id AND user_id = :user_id LIMIT 1";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([
+            ':gig_id' => $gig_id,
+            ':user_id' => $user_id
+        ]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
 
 
     public function record_transaction($data) {
