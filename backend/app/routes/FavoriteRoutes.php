@@ -78,6 +78,12 @@ Flight::route('DELETE /favorites/delete/@user_id/@gig_id', function ($user_id, $
     }
 });
 
+Flight::route('GET /favorites/@user_id/@gig_id', function ($user_id, $gig_id) {
+    $service = Flight::get("favorite_service");
+
+    $response = $service->is_favorite($user_id, $gig_id);
+    Flight::json(["is_favorite" => sizeof($response) !== 0]);
+});
 
 
 
