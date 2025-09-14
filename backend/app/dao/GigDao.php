@@ -39,11 +39,16 @@ Class GigDao{
         }
 
         public function get_gigs(){
-            $query = "SELECT * FROM gigs";
-            $stmt = $this->conn->prepare ($query);
+            $query = "SELECT id, user_id, title, category_id, 
+                            COALESCE(tags, '') AS tags,   -- ✅ always return tags
+                            price, status, created_at
+                    FROM gigs";
+            $stmt = $this->conn->prepare($query);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
+
+
 
         public function add_gig($gig){
             return $this->insert('gigs',$gig);

@@ -6,7 +6,16 @@ var Utils = {
         return JSON.parse(window.localStorage.getItem(key));
       },
       logout: function() {
-        window.localStorage.clear();
-        window.location = "login/index.html";
+        $.ajax({
+          url: 'http://localhost/BalkanFreelance/backend/auth/logout',
+          method: 'POST',
+          success: function (response) {
+            window.localStorage.clear();
+            window.location = "login/index.html";
+          },
+          error: function () {
+            alert("Something went wrong while logging out!");
+          }
+        });
       }
 }

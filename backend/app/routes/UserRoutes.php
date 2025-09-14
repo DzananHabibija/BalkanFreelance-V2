@@ -272,6 +272,11 @@ Flight::route('DELETE /users/delete/@user_id', function ($id) {
  * )
  */
 Flight::route('GET /google-callback', function () {
+    foreach ($_COOKIE as $cookie_name => $cookie_value) {
+        setcookie($cookie_name, '', time() - 3600, '/');
+        unset($_COOKIE[$cookie_name]);
+    }
+
     $client = Utils::getGoogleClient();
 
     if (!isset(Flight::request()->query['code'])) {
@@ -333,9 +338,15 @@ Flight::route('GET /google-callback', function () {
 
     $jwt = \Firebase\JWT\JWT::encode($jwtPayload, JWT_SECRET, 'HS256');
 
+    setcookie("id", $jwtPayload["user"]["id"], time() + 3600, "/");
+    setcookie("email", $jwtPayload["user"]["email"], time() + 3600, "/");
+    setcookie("first_name", $jwtPayload["user"]["first_name"], time() + 3600, "/");
+    setcookie("last_name", $jwtPayload["user"]["last_name"], time() + 3600, "/");
+    setcookie("jwt", $jwt, time() + 3600, "/");
+
     // Redirect with token
-    $baseFrontendUrl = "http://localhost/balkanfreelance/frontend/#home";
-    Flight::redirect($baseFrontendUrl . "?jwt=" . urlencode($jwt));
+    $baseFrontendUrl = "http://localhost/BalkanFreelance/frontend/#home";
+    Flight::redirect($baseFrontendUrl);
 });
 
 
@@ -388,4 +399,3 @@ Flight::route('PUT /users/@id/phone', function($id) {
     $service->update_phone($id, $data['phone_number']);
     Flight::json(['message' => 'Phone updated']);
 });
-
