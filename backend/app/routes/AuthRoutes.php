@@ -25,6 +25,10 @@ Flight::set('auth_service', new AuthService());
  * )
  */
 Flight::route('POST /auth/login', function() {
+    foreach ($_COOKIE as $cookie_name => $cookie_value) {
+        setcookie($cookie_name, '', time() - 3600, '/');
+        unset($_COOKIE[$cookie_name]);
+    }
     $payload = Flight::request()->data->getData();
 
     if (empty($payload['email']) || empty($payload['password'])) {
@@ -165,19 +169,23 @@ Flight::route('POST /auth/register', function() {
  * )
  */
 Flight::route('POST /auth/logout', function(){
-    try {
-        $token = Flight::request()->getHeader("Authentication");
-        if(!$token)
-            Flight::halt(401, "Missing authentication header");
-
-        $decoded_token = JWT::decode($token, new Key(JWT_SECRET, 'HS256'));
-
-        Flight::json([
-            'jwt_decoded' => $decoded_token,
-            'user' => $decoded_token->user
-        ]);
-    } catch (\Exception $e) {
-        Flight::halt(401, $e->getMessage());
+    foreach ($_COOKIE as $cookie_name => $cookie_value) {
+        setcookie($cookie_name, '', time() - 3600, '/');
+        unset($_COOKIE[$cookie_name]);
     }
+    // try {
+    //     $token = Flight::request()->getHeader("Authentication");
+    //     if(!$token)
+    //         Flight::halt(401, "Missing authentication header");
+
+    //     $decoded_token = JWT::decode($token, new Key(JWT_SECRET, 'HS256'));
+
+    //     Flight::json([
+    //         'jwt_decoded' => $decoded_token,
+    //         'user' => $decoded_token->user
+    //     ]);
+    // } catch (\Exception $e) {
+    //     Flight::halt(401, $e->getMessage());
+    // }
 
 });
