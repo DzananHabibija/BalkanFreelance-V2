@@ -130,10 +130,12 @@ function initAdminUsers() {
       email: $('#addEmail').val(),
       password: $('#addPassword').val(),
       country_id: $('#addCountryId').val(),
+      phone_number: $('#addPhoneNumber').val(),
       bio: $('#addBio').val(),
       balance: $('#addBalance').val(),
       isAdmin: $('#addRole').val()
     };
+
 
     if (!newUser.first_name || !newUser.last_name || !newUser.email || !newUser.password) {
       toastr.error('Please fill in all required fields.');

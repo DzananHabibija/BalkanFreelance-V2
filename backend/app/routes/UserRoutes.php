@@ -76,23 +76,62 @@ Flight::route('GET /users', function() {
  * )
  */
 Flight::route('POST /users/add', function() {
+    $data = Flight::request()->data->getData();
 
-    $payload = Flight::request()->data->getData();
-    
-    //  if($payload['username'] == NULL || $payload['username'] == '') {
-         
-    //      Flight::halt(500,"Username field is missing");
-    //  }
-    
-    
-     $user = Flight::get('user_service')->add_user($payload);
-    
-   
-    
-    
-    Flight::json($user);
-    
-    });
+    $required_fields = ['first_name','last_name', 'email', 'password', 'country_id', 'phone_number'];
+    foreach ($required_fields as $field) {
+        if (empty($data[$field])) {
+            Flight::halt(400, "Missing field: $field");
+        }
+    }
+
+    if (!preg_match('/^\+?[0-9\s\-()]{6,20}$/', $data['phone_number'])) {
+        Flight::halt(400, "Invalid phone number format.");
+    }
+
+    if (mb_strlen($data['first_name']) <= 1 || !ctype_alpha($data['first_name'])) {
+        Flight::halt(400, "First name must be longer and contain only letters.");
+    }
+
+    if (mb_strlen($data['last_name']) <= 1 || !ctype_alpha($data['last_name'])) {
+        Flight::halt(400, "Last name must be longer and contain only letters.");
+    }
+
+    if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+        Flight::halt(400, "Invalid email format.");
+    }
+
+    if (Flight::get('user_service')->get_user_by_email($data['email'])) {
+        Flight::halt(400, "This email is already associated with an existing account.");
+    }
+
+    if (mb_strlen($data['password']) < 8) {
+        Flight::halt(400, "Password must have at least 8 characters.");
+    }
+
+    $breached = Utils::check_if_password_breached($data['password']);
+    if ($breached['breached']) {
+        Flight::halt(400, $breached['message']);
+    }
+
+    $data['password'] = Utils::hash_my_password($data['password']);
+
+    // Default values for admin panel users
+    $data['bio'] = $data['bio'] ?? null;
+    $data['balance'] = $data['balance'] ?? 0.00;
+    $data['isAdmin'] = $data['isAdmin'] ?? 0;
+    $data['profile_image'] = $data['profile_image'] ?? null;
+
+    $newUser = Flight::get('user_service')->add_user($data);
+
+    unset($newUser['password']);
+
+    Flight::json([
+        'message' => 'User created successfully via admin panel.',
+        'user' => $newUser
+    ]);
+});
+
 
 
 /**

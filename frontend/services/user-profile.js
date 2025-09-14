@@ -188,8 +188,12 @@ function loadApplicationsForGig(gigId, container) {
             <span class="badge bg-${getStatusBadgeClass(app.status)}">${app.status}</span>
 
             ${app.status === "pending" ? 
-              `<button class="btn btn-sm btn-primary ms-2" onclick="approveApplicant(${gigId}, ${app.user_id})">Approve</button>` 
+              `
+              <button class="btn btn-sm btn-primary ms-2" onclick="approveApplicant(${gigId}, ${app.user_id})">Approve</button>
+              <button class="btn btn-sm btn-outline-danger ms-2" onclick="rejectApplicant(${gigId}, ${app.user_id})">Reject</button>
+              `
               : ""}
+
 
             ${app.status === "approved" ? 
               (app.paid === 1 
@@ -227,24 +231,57 @@ function approveApplicant(gigId, userId) {
   });
 }
 
+let selectedGigId = null;
+let selectedUserId = null;
+let selectedPrice = null;
+
 function payFreelancer(gigId, userId) {
-  const token = localStorage.getItem("jwt")?.replace(/"/g, "");
-  const currentUser = JSON.parse(localStorage.getItem("user"));
+  selectedGigId = gigId;
+  selectedUserId = userId;
+
   $.ajax({
-    url: `${API_BASE}/gigs/${gigId}/pay/${userId}`,
-    type: "POST",
-    headers: { Authorization: "Bearer " + token },
-    contentType: "application/json",
-    data: JSON.stringify({ payer_id: currentUser.id }),
-    success: function () {
-      toastr.success("Payment successful!");
-      location.reload();
+    url: `${API_BASE}/gigs/${gigId}`,
+    method: "GET",
+    dataType: "json",
+    success: function (gig) {
+      selectedPrice = parseFloat(gig.price);
+
+      const payModal = new bootstrap.Modal(document.getElementById('payModal'));
+      payModal.show();
+
+      $('#walletPayBtn').off('click').on('click', function () {
+        const token = localStorage.getItem("jwt")?.replace(/"/g, "");
+        const currentUser = JSON.parse(localStorage.getItem("user"));
+
+        $.ajax({
+          url: `${API_BASE}/gigs/${gigId}/pay/${userId}`,
+          type: "POST",
+          headers: { Authorization: "Bearer " + token },
+          contentType: "application/json",
+          data: JSON.stringify({ payer_id: currentUser.id }),
+          success: function () {
+            toastr.success("Payment successful!");
+            payModal.hide();
+            location.reload();
+          },
+          error: function (xhr) {
+            toastr.error("Payment failed: " + xhr.responseText);
+          }
+        });
+      });
+
+      loadPayPalSdk(() => {
+        renderPayPalButton();
+      });
+
     },
-    error: function (xhr) {
-      toastr.error("Payment failed: " + xhr.responseText);
+    error: function () {
+      toastr.error("Failed to load gig data.");
     }
   });
 }
+
+
 
 function enablePhoneEdit(currentPhone, userId) {
   $("#phone-display").replaceWith(`
@@ -352,3 +389,92 @@ function removeFavorite(userId, gigId) {
 loadFavorites((currentUser.id));
 
 
+function renderPayPalButton() {
+  $("#paypal-button-container").html(""); // clear old button
+
+  paypal.Buttons({
+    createOrder: function (data, actions) {
+      return actions.order.create({
+        purchase_units: [{
+          amount: {
+            value: selectedPrice.toFixed(2)
+          }
+        }]
+      });
+    },
+    onApprove: function (data, actions) {
+      console.log("Order approved. Capturing now...", data);
+
+      return actions.order.capture().then(function (details) {
+        console.log("Capture successful:", details);
+        toastr.success('Payment completed via PayPal');
+
+        const currentUser = JSON.parse(localStorage.getItem("user"));
+
+        $.ajax({
+          url: `${API_BASE}/paypal/payment-success`,
+          type: "POST",
+          contentType: "application/json",
+          data: JSON.stringify({
+            sender_id: currentUser.id,
+            receiver_id: selectedUserId,
+            gig_id: selectedGigId,
+            amount: selectedPrice
+          }),
+          success: function () {
+            toastr.success("PayPal payment registered in system!");
+            const modal = bootstrap.Modal.getInstance(document.getElementById('payModal'));
+            modal.hide();
+            location.reload();
+          },
+          error: function () {
+            toastr.error("Failed to register PayPal payment.");
+          }
+        });
+      }).catch(function (err) {
+        console.error("Capture failed:", err);
+        toastr.error("PayPal capture failed. Please check sandbox account setup.");
+      });
+    }
+  }).render('#paypal-button-container');
+}
+
+
+
+function loadPayPalSdk(callback) {
+  if (window.paypal) {
+    callback();
+    return;
+  }
+
+  $.ajax({
+    url: `${API_BASE}/config/paypal`,
+    method: "GET",
+    success: function (res) {
+      const script = document.createElement("script");
+      script.src = `https://www.sandbox.paypal.com/sdk/js?client-id=${res.clientId}&currency=USD&intent=capture`;
+      script.onload = callback;
+      document.head.appendChild(script);
+    },
+    error: function () {
+      toastr.error("Failed to load PayPal SDK.");
+    }
+  });
+}
+
+
+function rejectApplicant(gigId, userId) {
+  const token = localStorage.getItem("jwt")?.replace(/"/g, "");
+  $.ajax({
+    url: `${API_BASE}/gigs/${gigId}/reject/${userId}`,
+    type: "POST",
+    headers: { Authorization: "Bearer " + token },
+    success: function () {
+      toastr.info("Applicant rejected.");
+      location.reload();
+    },
+    error: function (xhr) {
+      toastr.error("Failed to reject: " + xhr.responseText);
+    }
+  });
+}

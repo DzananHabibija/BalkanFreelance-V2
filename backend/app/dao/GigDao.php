@@ -220,6 +220,16 @@ Class GigDao{
         ]);
     }
 
+    public function updateApplicationStatus($gig_id, $user_id, $status) {
+        $stmt = $this->conn->prepare("UPDATE applications SET status = :status WHERE gig_id = :gig_id AND user_id = :user_id");
+        return $stmt->execute([
+            ':status' => $status,
+            ':gig_id' => $gig_id,
+            ':user_id' => $user_id
+        ]);
+    }
+
+
     public function get_application_status($gig_id, $user_id) {
         $sql = "SELECT status
                 FROM applications

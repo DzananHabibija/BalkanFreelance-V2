@@ -105,6 +105,11 @@ Class GigService
         return ['success' => true];
     }
 
+    public function reject_application($gig_id, $user_id) {
+        return $this->dao->updateApplicationStatus($gig_id, $user_id, 'rejected');
+    }
+
+
 
 
 

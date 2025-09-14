@@ -43,6 +43,25 @@
   </div>
 </div>
 
+<div class="modal fade" id="payModal" tabindex="-1" aria-labelledby="payModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="payModalLabel">Choose Payment Method</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-3">How would you like to pay this freelancer?</p>
+        <div class="d-flex justify-content-around">
+          <button id="walletPayBtn" class="btn btn-outline-primary">Pay with Wallet</button>
+          <div id="paypal-button-container"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <script src="services/user-profile.js?v=1.3"></script>
 <script>
   const userId = localStorage.getItem("viewingUserId");
@@ -53,3 +72,5 @@
       `<div class="alert alert-warning">No user selected.</div>`;
   }
 </script>
+
+<!-- <script src="https://www.paypal.com/sdk/js?client-id=<?= PAYPAL_CLIENT_ID ?>&currency=USD"></script> -->
