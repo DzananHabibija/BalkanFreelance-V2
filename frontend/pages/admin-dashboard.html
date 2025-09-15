@@ -36,8 +36,6 @@
 
 <script>
   $(document).ready(function () {
-    const user = Utils.get_from_localstorage("user");
-    if(user["isAdmin"] != 1) window.location = "#home";
 
     // First load DataTables
     $.when(
