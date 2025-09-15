@@ -27,4 +27,23 @@ $(document).ready(function () {
     alert("You must log in first.");
     window.location.href = "login/index.html";
   }
+
+  $(function () {
+    $(window).on("hashchange", function () {
+      enforceAuthGuard();
+    });
+
+    function enforceAuthGuard() {
+      const user = Utils.get_from_localstorage("user");
+      const hash = window.location.hash;
+
+      if (hash === "#admin") {
+        if (!user || user["isAdmin"] != 1) {
+          window.location = "#home";
+        }
+      }
+    }
+
+    enforceAuthGuard();
+  });
 });
