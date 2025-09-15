@@ -5,6 +5,7 @@ $(document).ready(function () {
   const firstName = cookieObj.get("first_name");
   const lastName = cookieObj.get("last_name");
   const email = cookieObj.get("email");
+  const is_admin = cookieObj.get("isAdmin");
   const jwt = cookieObj.get("jwt");
 
   if(id && jwt) {
@@ -13,6 +14,7 @@ $(document).ready(function () {
       first_name: firstName,
       last_name: lastName,
       email: email,
+      isAdmin: is_admin,
       token: jwt,
     };
     Utils.set_to_localstorage("user", user);

@@ -316,7 +316,7 @@ Flight::route('GET /google-callback', function () {
             'profile_image' => null,
             'bio' => null,
             'balance' => 0.00,
-            'isAdmin' => 0,
+            'is_admin' => 0,
         ];
 
         $userDao = Flight::get("user_service")->get_user_dao();
@@ -330,7 +330,8 @@ Flight::route('GET /google-callback', function () {
         'id' => $user['id'],
         'email' => $user['email'],
         'first_name' => $user['first_name'],
-        'last_name' => $user['last_name']
+        'last_name' => $user['last_name'],
+        'is_admin' => $user['isAdmin']
         ],
         'iat' => time(),
         'exp' => time() + 3600
@@ -342,6 +343,7 @@ Flight::route('GET /google-callback', function () {
     setcookie("email", $jwtPayload["user"]["email"], time() + 3600, "/");
     setcookie("first_name", $jwtPayload["user"]["first_name"], time() + 3600, "/");
     setcookie("last_name", $jwtPayload["user"]["last_name"], time() + 3600, "/");
+    setcookie("isAdmin", $jwtPayload["user"]["is_admin"], time() + 3600, "/");
     setcookie("jwt", $jwt, time() + 3600, "/");
 
     // Redirect with token
