@@ -10,6 +10,10 @@ Flight::route('/*', function () {
         '/auth/logout',
         '/google-login',
         '/google-callback',
+        '/paypal/capture-order/',
+        '/paypal/create-order',
+        '/config/paypal',
+        '/paypal/payment-success'
     ];
 
     $current_route = Flight::request()->url;

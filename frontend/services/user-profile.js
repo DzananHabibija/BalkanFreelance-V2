@@ -394,48 +394,55 @@ function renderPayPalButton() {
 
   paypal.Buttons({
     createOrder: function (data, actions) {
-      return actions.order.create({
-        purchase_units: [{
-          amount: {
-            value: selectedPrice.toFixed(2)
-          }
-        }]
+      return fetch(`${API_BASE}/paypal/create-order`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: selectedPrice.toFixed(2) })
+      })
+      .then(res => res.json())
+      .then(order => {
+        return order.id;
       });
     },
     onApprove: function (data, actions) {
-      console.log("Order approved. Capturing now...", data);
+    console.log("Order approved:", data);
 
-      return actions.order.capture().then(function (details) {
-        console.log("Capture successful:", details);
-        toastr.success('Payment completed via PayPal');
+    return fetch(`${API_BASE}/paypal/capture-order/${data.orderID}`, {
+      method: "POST"
+    })
+    .then(res => res.json())
+    .then(details => {
+      console.log("Capture successful:", details);
+      toastr.success('Payment completed via PayPal');
 
-        const currentUser = JSON.parse(localStorage.getItem("user"));
+      const currentUser = JSON.parse(localStorage.getItem("user"));
 
-        $.ajax({
-          url: `${API_BASE}/paypal/payment-success`,
-          type: "POST",
-          contentType: "application/json",
-          data: JSON.stringify({
-            sender_id: currentUser.id,
-            receiver_id: selectedUserId,
-            gig_id: selectedGigId,
-            amount: selectedPrice
-          }),
-          success: function () {
-            toastr.success("PayPal payment registered in system!");
-            const modal = bootstrap.Modal.getInstance(document.getElementById('payModal'));
-            modal.hide();
-            location.reload();
-          },
-          error: function () {
-            toastr.error("Failed to register PayPal payment.");
-          }
-        });
-      }).catch(function (err) {
-        console.error("Capture failed:", err);
-        toastr.error("PayPal capture failed. Please check sandbox account setup.");
+      $.ajax({
+        url: `${API_BASE}/paypal/payment-success`,
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({
+          sender_id: currentUser.id,
+          receiver_id: selectedUserId,
+          gig_id: selectedGigId,
+          amount: selectedPrice
+        }),
+        success: function () {
+          toastr.success("PayPal payment registered in system!");
+          const modal = bootstrap.Modal.getInstance(document.getElementById('payModal'));
+          modal.hide();
+          location.reload();
+        },
+        error: function () {
+          toastr.error("Failed to register PayPal payment.");
+        }
       });
-    }
+    })
+    .catch(err => {
+      console.error("Capture failed:", err);
+      toastr.error("PayPal capture failed. Please check sandbox account setup.");
+    });
+  }
   }).render('#paypal-button-container');
 }
 
