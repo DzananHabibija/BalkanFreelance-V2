@@ -221,15 +221,35 @@ Flight::route('GET /gigs/full/@id', function($id){
 });
 
 Flight::route('POST /gigs/@id/apply', function ($gig_id) {
-    $data = Flight::request()->data->getData();
-    $user_id = $data['user_id'];
-    $cover_letter = $data['cover_letter'] ?? '';
+    $user_id = $_POST['user_id'] ?? null;
+    $message = $_POST['application_message'] ?? '';
+    $cv_filename = null;
+
+    // Handle file upload if provided
+    if (!empty($_FILES['application_cv']['tmp_name'])) {
+        // Public uploads folder (root/uploads/applications)
+        $upload_dir = __DIR__ . '/../../../uploads/applications/';
+        if (!file_exists($upload_dir)) {
+            mkdir($upload_dir, 0777, true);
+        }
+
+        $ext = pathinfo($_FILES['application_cv']['name'], PATHINFO_EXTENSION);
+        $filename = uniqid('cv_') . "." . $ext;
+        $destination = $upload_dir . $filename;
+
+        if (move_uploaded_file($_FILES['application_cv']['tmp_name'], $destination)) {
+            // ✅ Save relative path without /backend
+            $cv_filename = 'uploads/applications/' . $filename;
+        }
+    }
 
     $service = Flight::get('gig_service');
-    $service->apply_to_gig($gig_id, $user_id, $cover_letter);
+    $service->apply_to_gig($gig_id, $user_id, $message, $cv_filename);
 
-    Flight::json(['message' => 'Application submitted']);
+    Flight::json(['message' => 'Application submitted successfully']);
 });
+
+
 
 Flight::route('GET /gigs/@id/applications', function ($gig_id) {
     $service = Flight::get("gig_service");

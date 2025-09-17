@@ -23,10 +23,17 @@ Class GigService
     }
 
     public function get_gigs(){
-        return $this->dao->get_gigs();
+                $gigs = $this->dao->get_gigs();
+        foreach ($gigs as &$gig) {
+            $gig['is_locked'] = $this->dao->is_gig_locked($gig['id']);
+        }
+        return $gigs;
     }
 
     public function delete_gig($id){
+        if ($this->dao->is_gig_locked($id)) {
+            Flight::halt(403, "Cannot delete this gig. A freelancer is approved and not yet paid.");
+        }
         return $this->dao->delete_gig($id);
     }
 
@@ -43,8 +50,11 @@ Class GigService
     }
 
    public function updateGig($id, $title, $price, $status, $gig_image_url = null) {
+    if ($this->dao->is_gig_locked($id)) {
+        Flight::halt(403, "Gig is locked because a freelancer has been approved but not paid.");
+    }
     return $this->dao->updateGig($id, $title, $price, $status, $gig_image_url);
-}
+    }
 
 
     public function getAllWithFilters(array $filters) {
@@ -57,9 +67,10 @@ Class GigService
         }
 
 
-    public function apply_to_gig($gig_id, $user_id, $cover_letter) {
-        return $this->dao->apply_to_gig($gig_id, $user_id, $cover_letter);
+   public function apply_to_gig($gig_id, $user_id, $message, $cv_filename = null) {
+        return $this->dao->apply_to_gig($gig_id, $user_id, $message, $cv_filename);
     }
+
 
     public function get_applications_for_gig($gig_id) {
         return $this->dao->get_applications_for_gig($gig_id);
@@ -108,6 +119,11 @@ Class GigService
     public function reject_application($gig_id, $user_id) {
         return $this->dao->updateApplicationStatus($gig_id, $user_id, 'rejected');
     }
+
+    public function is_gig_locked($gig_id) {
+        return $this->dao->is_gig_locked($gig_id);
+    }
+
 
 
 

@@ -4,3 +4,27 @@
   </div>
 </div>
 
+<!-- Apply Modal -->
+<div class="modal fade" id="applyModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Apply to this Gig</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="applicationForm" enctype="multipart/form-data">
+          <div class="mb-3">
+            <label for="applicationMessage" class="form-label">Message</label>
+            <textarea class="form-control" id="applicationMessage" name="application_message" rows="4"></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="applicationCv" class="form-label">Upload CV (optional)</label>
+            <input class="form-control" type="file" id="applicationCv" name="application_cv" accept=".pdf,.doc,.docx">
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Submit Application</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

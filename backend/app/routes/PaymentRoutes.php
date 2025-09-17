@@ -3,6 +3,8 @@
 require_once __DIR__ . '/../services/PaymentService.php';
 require_once __DIR__ . '/../../config/config.php';
 
+
+
 Flight::set('payment_service', new PaymentService());
 
 /**
@@ -109,5 +111,3 @@ Flight::route('POST /paypal/capture-order/@id', function($id) {
 
     Flight::json($response);
 });
-
-

@@ -103,9 +103,9 @@ Flight::route('POST /auth/register', function() {
         }
     }
 
-    if (!preg_match('/^\+?[0-9\s\-()]{6,20}$/', $data['phone_number'])) {
-        Flight::halt(400, "Invalid phone number format.");
-    }   
+    // if (!preg_match('/^\+?[0-9\s\-()]{6,20}$/', $data['phone_number'])) {
+    //     Flight::halt(400, "Invalid phone number format.");
+    // }   
 
 
     if (mb_strlen($data['first_name']) <= 1) {
@@ -136,10 +136,30 @@ Flight::route('POST /auth/register', function() {
         Flight::halt(400, "This email is already associated with an existing account"); #or "Username already in use"
     }   
 
+        
+    if (!Utils::validate_tlds($data['email'])) {
+        Flight::halt(400,'Invalid top-level domain (TLD) in email!');
+        return;
+    }
+
+     
+    if (!Utils::validate_mx_record($data['email'])) {
+        Flight::halt(400,'No MX records found for the email domain!');
+        return;
+    }
+
+
     $breached = Utils::check_if_password_breached($data['password']);
     if ($breached['breached']) {
         Flight::halt(400, $breached['message']);
     }
+
+    if (!Utils::validate_phone_number($data['phone_number'])) {
+        Flight::halt(400,'Invalid phone number format!');
+        return;
+    }
+
+
 
     // if (Utils::check_if_password_breached($data['password'])) {
     //     Flight::halt(400, "This password has been breached before. Please choose a stronger password.");

@@ -173,25 +173,26 @@ Class GigDao{
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
       }
 
-      public function apply_to_gig($gig_id, $user_id, $cover_letter) {
-        $sql = "INSERT INTO applications (user_id, gig_id, cover_letter, status, applied_at)
-                VALUES (:user_id, :gig_id, :cover_letter, 'pending', NOW())";
-
-        $stmt = $this->conn->prepare($sql);
+    public function apply_to_gig($gig_id, $user_id, $message, $cv_filename = null) {
+        $stmt = $this->conn->prepare("
+            INSERT INTO applications (gig_id, user_id, application_message, application_cv, status, applied_at)
+            VALUES (:gig_id, :user_id, :message, :cv, 'pending', NOW())
+        ");
         $stmt->execute([
-            ':user_id' => $user_id,
             ':gig_id' => $gig_id,
-            ':cover_letter' => $cover_letter
+            ':user_id' => $user_id,
+            ':message' => $message,
+            ':cv' => $cv_filename
         ]);
-        
-        return true;
-     }
+    }
 
-     public function get_applications_for_gig($gig_id) {
+
+public function get_applications_for_gig($gig_id) {
     $sql = "SELECT 
-                a.id as application_id,
+                a.id AS application_id,
                 a.user_id,
-                a.cover_letter,
+                a.application_message,
+                a.application_cv,
                 a.status,
                 a.paid,
                 a.applied_at,
@@ -207,6 +208,7 @@ Class GigDao{
     $stmt->execute([':gig_id' => $gig_id]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
+
 
 
     public function approve_applicant($gig_id, $user_id) {
@@ -306,6 +308,15 @@ Class GigDao{
             ':transaction_date' => $data['transaction_date']
         ]);
     }
+
+    public function is_gig_locked($gig_id) {
+        $sql = "SELECT COUNT(*) FROM applications 
+                WHERE gig_id = :gig_id AND status = 'approved' AND paid = 0";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':gig_id' => $gig_id]);
+        return $stmt->fetchColumn() > 0;
+    }
+
 
       
 

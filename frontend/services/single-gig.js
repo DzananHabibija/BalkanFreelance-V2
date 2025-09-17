@@ -104,15 +104,39 @@ if (typeof SingleGig === 'undefined') {
                   </div>` : ''}
               </div>
             </div>
+
+            <!-- Apply Modal -->
+            <div class="modal fade" id="applyModal" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Apply to this Gig</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                  </div>
+                  <div class="modal-body">
+                    <form id="applicationForm" enctype="multipart/form-data">
+                      <div class="mb-3">
+                        <label for="applicationMessage" class="form-label">Message</label>
+                        <textarea class="form-control" id="applicationMessage" name="application_message" rows="4"></textarea>
+                      </div>
+                      <div class="mb-3">
+                        <label for="applicationCv" class="form-label">Upload CV (optional)</label>
+                        <input class="form-control" type="file" id="applicationCv" name="application_cv" accept=".pdf,.doc,.docx">
+                      </div>
+                      <button type="submit" class="btn btn-primary w-100">Submit Application</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
           `;
 
           $container.html(gigHtml);
 
-         
           const $applyBtn = $('#applyBtn');
 
           if (currentUser && currentUser.id === gig.user_id) {
-            $applyBtn.remove(); 
+            $applyBtn.remove();
           } else if (currentUser) {
             $.ajax({
               url: `${BASE_URL}/backend/gigs/${gig.id}/application-status/${currentUser.id}`,
@@ -141,15 +165,28 @@ if (typeof SingleGig === 'undefined') {
                   $applyBtn.addClass("btn-secondary").removeClass("btn-primary")
                     .text("Application Rejected").prop("disabled", true);
                 } else {
+                  // open modal
                   $applyBtn.on('click', function () {
+                    $('#applyModal').modal('show');
+                  });
+
+                  // handle form submission
+                  $(document).off('submit', '#applicationForm').on('submit', '#applicationForm', function (e) {
+                    e.preventDefault();
+
+                    const formData = new FormData(this);
+                    formData.append("user_id", currentUser.id);
+
                     $.ajax({
                       url: `${BASE_URL}/backend/gigs/${gig.id}/apply`,
                       type: "POST",
                       headers: { Authorization: "Bearer " + token },
-                      contentType: "application/json",
-                      data: JSON.stringify({ user_id: currentUser.id, cover_letter: "" }),
+                      data: formData,
+                      processData: false,
+                      contentType: false,
                       success: function () {
                         toastr.success("Application submitted!");
+                        $('#applyModal').modal('hide');
                         $applyBtn.addClass("btn-warning").removeClass("btn-primary")
                           .text("Applied – Pending").prop("disabled", true);
                       },

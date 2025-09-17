@@ -164,10 +164,16 @@ Flight::route('POST /users/update', function () {
 
 
 Flight::route('GET /user-profile/@id', function($id){
-    $userService = new UserService();
+    $userService = Flight::get("user_service");  // Use singleton
+    $gigService = Flight::get("gig_service");
+
     $user = $userService->getUserById($id);
     $gigs = $userService->getUserGigs($id);
-    
+
+    foreach ($gigs as &$gig) {
+        $gig['is_locked'] = $gigService->is_gig_locked($gig['id']);
+    }
+
     if (!$user) {
         Flight::json(["error" => "User not found"], 404);
     } else {
@@ -177,6 +183,7 @@ Flight::route('GET /user-profile/@id', function($id){
         ]);
     }
 });
+
 
 
 Flight::route('PUT /users/@id/bio', function($id) {

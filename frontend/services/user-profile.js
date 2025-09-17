@@ -17,10 +17,12 @@ function loadUserProfile(userId) {
         `;
       }
 
+      // First render the static profile info
       $("#user-info").html(`
         <p><strong>Name:</strong> ${user.first_name} ${user.last_name}</p>
         <p><strong>Email:</strong> ${user.email}</p>
         <p><strong>Phone:</strong> <span id="phone-display">${user.phone_number || "Not provided"}</span></p>
+        <div id="userRating"><span class="text-muted">Loading rating...</span></div>
         <p><strong>Balance:</strong> $<span id="userBalance">0.00</span></p>
         ${bioHtml}
         <div id="bio-controls">${bioControls}</div>
@@ -29,9 +31,29 @@ function loadUserProfile(userId) {
         ` : ""}
       `);
 
+      // ✅ Fetch and display user rating summary safely
+      $.ajax({
+        url: `${API_BASE}/reviews/summary/${user.id}`,
+        method: "GET",
+        success: function (summary) {
+          const avg = summary && summary.average_rating ? parseFloat(summary.average_rating) : null;
+          const total = summary && summary.total_reviews ? summary.total_reviews : 0;
+
+          if (avg !== null && !isNaN(avg) && total > 0) {
+            $("#userRating").html(`
+              <p><strong>Rating:</strong> ⭐ ${avg.toFixed(1)} 
+              (${total} review${total !== 1 ? "s" : ""})</p>
+            `);
+          } else {
+            $("#userRating").html(`<p><strong>Rating:</strong> ⭐ N/A (no reviews yet)</p>`);
+          }
+        },
+        error: function () {
+          $("#userRating").html(`<p><strong>Rating:</strong> ⭐ N/A</p>`);
+        }
+      });
 
       loadUserBalance(user.id);
-
 
       if (!gigs.length) {
         $("#user-gigs").html(`<p class="text-muted">No gigs created by this user.</p>`);
@@ -50,18 +72,31 @@ function loadUserProfile(userId) {
         `;
 
         if (currentUser && parseInt(currentUser.id) === parseInt(gig.user_id)) {
+          if (gig.is_locked) {
+            html += `
+              <div class="mt-2 mb-2">
+                <button class="btn btn-sm btn-warning me-2" disabled>Edit</button>
+                <button class="btn btn-sm btn-danger" disabled>Delete</button>
+                <div class="text-muted small">Locked: Freelancer approved but not paid yet</div>
+              </div>
+            `;
+          } else {
+            html += `
+              <div class="mt-2 mb-2">
+                <button class="btn btn-sm btn-warning me-2" onclick="openEditGigModal(${gig.id}, '${gig.title}', ${gig.price}, '${gig.status}')">Edit</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteGig(${gig.id})">Delete</button>
+              </div>
+            `;
+          }
+
           html += `
-            <div class="mt-2 mb-2">
-              <button class="btn btn-sm btn-warning me-2" onclick="openEditGigModal(${gig.id}, '${gig.title}', ${gig.price}, '${gig.status}')">Edit</button>
-              <button class="btn btn-sm btn-danger" onclick="deleteGig(${gig.id})">Delete</button>
-            </div>
             <div class="border-top pt-2" id="applications-${gig.id}">
               <div class="text-muted small">Loading applications...</div>
             </div>
           `;
+
           setTimeout(() => loadApplicationsForGig(gig.id, $(`#applications-${gig.id}`)), 0);
         }
-
 
         html += `</div></div></div>`;
         return html;
@@ -75,7 +110,7 @@ function loadUserProfile(userId) {
   });
 }
 
-// Enable inline bio editing
+
 function enableBioEdit(currentBio, userId) {
   $("#bio-display").replaceWith(`
     <div id="bio-edit">
@@ -84,10 +119,9 @@ function enableBioEdit(currentBio, userId) {
       <button class="btn btn-sm btn-secondary" onclick="location.reload()">Cancel</button>
     </div>
   `);
-  $("#bio-controls").remove(); // Remove the "Change Bio" button
+  $("#bio-controls").remove(); 
 }
 
-// Save bio update
 function saveBio(userId) {
   const newBio = $("#bio-input").val();
   $.ajax({
@@ -105,7 +139,6 @@ function saveBio(userId) {
   });
 }
 
-// Gig editing
 function openEditGigModal(id, title, price, status) {
   $("#edit-gig-id").val(id);
   $("#edit-gig-title").val(title);
@@ -178,33 +211,66 @@ function loadApplicationsForGig(gigId, container) {
         return;
       }
 
-      const list = applications.map(app => `
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          <div>
-            <strong>${app.user_first_name} ${app.user_last_name}</strong> (${app.user_email})
-            <div class="text-muted small">Applied on ${new Date(app.created_at).toLocaleDateString()}</div>
-          </div>
-          <div>
-            <span class="badge bg-${getStatusBadgeClass(app.status)}">${app.status}</span>
+      // Fetch rating summaries for all applicants in parallel
+      const ratingRequests = applications.map(app => {
+        return $.ajax({
+          url: `${API_BASE}/reviews/summary/${app.user_id}`,
+          method: "GET"
+        }).then(summary => ({
+          userId: app.user_id,
+          summary: summary
+        })).catch(() => ({
+          userId: app.user_id,
+          summary: { average_rating: null, total_reviews: 0 }
+        }));
+      });
 
-            ${app.status === "pending" ? 
-              `
-              <button class="btn btn-sm btn-primary ms-2" onclick="approveApplicant(${gigId}, ${app.user_id})">Approve</button>
-              <button class="btn btn-sm btn-outline-danger ms-2" onclick="rejectApplicant(${gigId}, ${app.user_id})">Reject</button>
-              `
-              : ""}
+      Promise.all(ratingRequests).then(results => {
+        const ratingMap = {};
+        results.forEach(r => {
+          ratingMap[r.userId] = r.summary;
+        });
 
+        const list = applications.map(app => {
+          const summary = ratingMap[app.user_id] || {};
+          const avg = (summary && summary.average_rating) ? parseFloat(summary.average_rating).toFixed(1) : "N/A";
+          const total = summary.total_reviews || 0;
 
-            ${app.status === "approved" ? 
-              (app.paid === 1 
-                ? `<span class="badge bg-success ms-2">Paid</span>` 
-                : `<button class="btn btn-sm btn-success ms-2" onclick="payFreelancer(${gigId}, ${app.user_id})">Pay</button>`)
-              : ""}
-          </div>
-        </li>
-      `).join("");
+          return `
+            <li class="list-group-item application-entry"
+                data-message="${escapeHtml(app.application_message || "No message")}"
+                data-cv="${app.application_cv || ''}">
 
-      $(container).html(`<ul class="list-group">${list}</ul>`);
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <strong>${app.user_first_name} ${app.user_last_name}</strong> (${app.user_email})
+                  <div class="text-muted small">Applied on ${new Date(app.applied_at).toLocaleDateString()}</div>
+                  <div class="text-warning small">
+                    ⭐ ${avg} (${total} review${total !== 1 ? "s" : ""})
+                  </div>
+                </div>
+                <div>
+                  <span class="badge bg-${getStatusBadgeClass(app.status)}">${app.status}</span>
+                  ${app.status === "approved" && app.paid === 1 ? `<span class="badge bg-success ms-2">Paid</span>` : ""}
+                </div>
+              </div>
+
+              <div class="mt-2">
+                ${app.status === "pending" ? `
+                  <button class="btn btn-sm btn-primary me-2" onclick="event.stopPropagation(); approveApplicant(${gigId}, ${app.user_id})">Approve</button>
+                  <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); rejectApplicant(${gigId}, ${app.user_id})">Reject</button>
+                ` : ""}
+
+                ${app.status === "approved" && app.paid !== 1 ? `
+                  <button class="btn btn-sm btn-success" onclick="event.stopPropagation(); payFreelancer(${gigId}, ${app.user_id})">Pay</button>
+                ` : ""}
+              </div>
+            </li>
+          `;
+        }).join("");
+
+        $(container).html(`<ul class="list-group">${list}</ul>`);
+      });
     },
     error: function () {
       toastr.error("Failed to load applications.");
@@ -212,6 +278,18 @@ function loadApplicationsForGig(gigId, container) {
   });
 }
 
+
+
+
+// Make application row clickable unless user clicks an internal button
+$(document).on('click', '.application-entry', function (e) {
+  if ($(e.target).is('button')) return; // prevent click if a button was clicked
+
+  const message = $(this).data("message");
+  const cv = $(this).data("cv");
+
+  viewApplication(message, cv);
+});
 
 
 
@@ -234,6 +312,13 @@ function approveApplicant(gigId, userId) {
 let selectedGigId = null;
 let selectedUserId = null;
 let selectedPrice = null;
+
+function promptReview(gigId, reviewedUserId) {
+  $('#reviewGigId').val(gigId);
+  $('#reviewedUserId').val(reviewedUserId);
+  $('#ratingModal').modal('show');
+}
+
 
 function payFreelancer(gigId, userId) {
   selectedGigId = gigId;
@@ -262,24 +347,29 @@ function payFreelancer(gigId, userId) {
           success: function () {
             toastr.success("Payment successful!");
             payModal.hide();
-            location.reload();
-          },
+            promptReview(gigId, userId); // <-- ask for review
+          }
+          ,
           error: function (xhr) {
             toastr.error("Payment failed: " + xhr.responseText);
           }
         });
       });
 
+      $('#cryptoPayBtn').off('click').on('click', function () {
+        handleCryptoPayment();
+      });
+
       loadPayPalSdk(() => {
         renderPayPalButton();
       });
-
     },
     error: function () {
       toastr.error("Failed to load gig data.");
     }
   });
 }
+
 
 
 
@@ -349,13 +439,24 @@ function loadFavorites(userId) {
         `;
 
         if (currentUser && parseInt(currentUser.id) === parseInt(gig.user_id)) {
-          html += `
-            <div class="mt-2 mb-2">
-              <button class="btn btn-sm btn-warning me-2" onclick="openEditGigModal(${gig.id}, '${gig.title}', ${gig.price}, '${gig.status}')">Edit</button>
-              <button class="btn btn-sm btn-danger" onclick="deleteGig(${gig.id})">Delete</button>
-            </div>
-          `;
+          if (gig.is_locked) {
+            html += `
+              <div class="mt-2 mb-2">
+                <button class="btn btn-sm btn-warning me-2" disabled>Edit</button>
+                <button class="btn btn-sm btn-danger" disabled>Delete</button>
+                <div class="text-muted small">Locked: Freelancer approved but not yet paid</div>
+              </div>
+            `;
+          } else {
+            html += `
+              <div class="mt-2 mb-2">
+                <button class="btn btn-sm btn-warning me-2" onclick="openEditGigModal(${gig.id}, '${gig.title}', ${gig.price}, '${gig.status}')">Edit</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteGig(${gig.id})">Delete</button>
+              </div>
+            `;
+          }
         }
+
 
         html += `</div></div></div>`;
         return html;
@@ -389,11 +490,46 @@ function removeFavorite(userId, gigId) {
 loadFavorites((currentUser.id));
 
 
+
+function viewApplication(message, cvUrl) {
+  $("#applicationMessage").text(message || "No message");
+
+  if (cvUrl) {
+    // Just strip the backend/ part if it's mistakenly included
+    const cleanedUrl = cvUrl.replace(/^\/?backend\/?/, '').replace(/^\/+/, '');
+    const cvDownloadUrl = `/` + cleanedUrl; // Relative to project root
+
+    $("#applicationCv").html(
+      `<a href="${cvDownloadUrl}" target="_blank" download class="btn btn-outline-primary">Download CV</a>`
+    );
+  } else {
+    $("#applicationCv").html(`<span class="text-muted">No CV uploaded</span>`);
+  }
+
+  const modal = new bootstrap.Modal(document.getElementById("viewApplicationModal"));
+  modal.show();
+}
+
+
+// helper for XSS safety
+function escapeHtml(text) {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+
+
+
 function renderPayPalButton() {
   $("#paypal-button-container").html(""); // clear old button
 
   paypal.Buttons({
     createOrder: function (data, actions) {
+
       return fetch(`${API_BASE}/paypal/create-order`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -407,6 +543,7 @@ function renderPayPalButton() {
     onApprove: function (data, actions) {
     console.log("Order approved:", data);
 
+
     return fetch(`${API_BASE}/paypal/capture-order/${data.orderID}`, {
       method: "POST"
     })
@@ -417,6 +554,7 @@ function renderPayPalButton() {
 
       const currentUser = JSON.parse(localStorage.getItem("user"));
 
+ 
       $.ajax({
         url: `${API_BASE}/paypal/payment-success`,
         type: "POST",
@@ -431,7 +569,7 @@ function renderPayPalButton() {
           toastr.success("PayPal payment registered in system!");
           const modal = bootstrap.Modal.getInstance(document.getElementById('payModal'));
           modal.hide();
-          location.reload();
+          promptReview(selectedGigId, selectedUserId);
         },
         error: function () {
           toastr.error("Failed to register PayPal payment.");
@@ -445,6 +583,7 @@ function renderPayPalButton() {
   }
   }).render('#paypal-button-container');
 }
+
 
 
 
@@ -485,3 +624,103 @@ function rejectApplicant(gigId, userId) {
     }
   });
 }
+
+
+function simulateCryptoWebhook(paymentData) {
+  $.ajax({
+    url: `${API_BASE}/crypto/webhook`,
+    method: "POST",
+    contentType: "application/json",
+    headers: {
+      "X_CC_WEBHOOK_SIGNATURE": "fake_signature"
+    },
+    data: JSON.stringify({
+      event: {
+        type: "charge:confirmed",
+        data: {
+          metadata: {
+            sender_id: paymentData.sender_id,
+            receiver_id: paymentData.receiver_id,
+            gig_id: paymentData.gig_id
+          },
+          pricing: {
+            local: {
+              amount: paymentData.amount
+            }
+          }
+        }
+      }
+    }),
+    success: function () {
+      toastr.success("Simulated crypto payment completed!");
+      const modal = bootstrap.Modal.getInstance(document.getElementById('payModal'));
+      modal.hide();
+      promptReview(paymentData.gig_id, paymentData.receiver_id);
+    },
+    error: function () {
+      toastr.error("Simulated crypto webhook failed.");
+    }
+  });
+}
+
+function handleCryptoPayment() {
+  const currentUser = JSON.parse(localStorage.getItem("user"));
+
+  const paymentData = {
+    amount: selectedPrice,
+    gig_id: selectedGigId,
+    sender_id: currentUser.id,
+    receiver_id: selectedUserId
+  };
+
+  $.ajax({
+    url: `${API_BASE}/crypto/create-payment`,
+    method: "POST",
+    contentType: "application/json",
+    data: JSON.stringify(paymentData),
+    success: function (res) {
+      const popup = window.open(res.payment_url, "_blank");
+
+      const timer = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(timer);
+          simulateCryptoWebhook(paymentData);
+        }
+      }, 500);
+    },
+    error: function () {
+      toastr.error("Failed to initiate crypto payment.");
+    }
+  });
+}
+
+
+$('#reviewForm').on('submit', function (e) {
+  e.preventDefault();
+  const token = localStorage.getItem("jwt")?.replace(/"/g, "");
+  const currentUser = JSON.parse(localStorage.getItem("user"));
+
+  const data = {
+    reviewer_id: currentUser.id,
+    reviewed_id: $('#reviewedUserId').val(),
+    gig_id: $('#reviewGigId').val(),
+    rating: parseInt($('#rating').val()),
+    review_comment: $('#reviewComment').val()
+  };
+
+  $.ajax({
+    url: `${API_BASE}/reviews`,
+    method: "POST",
+    contentType: "application/json",
+    headers: { Authorization: `Bearer ${token}` },
+    data: JSON.stringify(data),
+    success: function () {
+      toastr.success("Review submitted!");
+      $('#ratingModal').modal('hide');
+      location.reload();
+    },
+    error: function (xhr) {
+      toastr.error("Failed to submit review: " + (xhr.responseJSON?.error || "Unknown error"));
+    }
+  });
+});

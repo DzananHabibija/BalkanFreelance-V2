@@ -87,4 +87,47 @@ class Utils{
         'message' => 'Username is allowed.'
         ];
     }
+
+    public static function validate_tlds($email){
+        $tlds = file_get_contents('https://data.iana.org/TLD/tlds-alpha-by-domain.txt');
+        $email_parts = explode('@', $email);
+        $domain = array_pop($email_parts);
+        $domain_parts = explode('.', $domain);
+        $tld = strtoupper(array_pop($domain_parts));
+        $tlds_array = explode("\n", $tlds);
+
+        if (in_array($tld, $tlds_array)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    
+
+    public static function validate_mx_record($email){
+    $parts = explode("@", $email);
+    $domain = $parts[1];
+
+    return getmxrr($domain, $mx_details) && !empty($mx_details);
+    }
+
+
+    
+    public static function validate_phone_number($phone_number){
+        $phone_util = \libphonenumber\PhoneNumberUtil::getInstance();
+        try {
+        $number_proto = $phone_util->parse($phone_number, "BA");
+        if ($phone_util->getNumberType($number_proto) === \libphonenumber\PhoneNumberType::MOBILE) {
+            return true;
+        } else {
+            return false;
+
+
+        }
+        } catch (\libphonenumber\NumberParseException $e) {
+        echo $e->getMessage();
+        }
+
+    }
 }

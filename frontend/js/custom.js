@@ -65,6 +65,11 @@ $(document).ready(function () {
   });
 
   app.route({
+  view: 'fake-coinbase',
+  load: 'fake-coinbase.html' 
+  });
+
+  app.route({
   view: 'single-blog',
   load: 'single-blog.html',
   onEnter: function () {

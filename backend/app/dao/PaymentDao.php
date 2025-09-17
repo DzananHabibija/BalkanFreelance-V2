@@ -36,4 +36,18 @@ class PaymentDao {
             ':user_id' => $user_id
         ]);
     }
+
+    public function recordCryptoPayment($data) {
+        $sql = "INSERT INTO transactions (sender_id, receiver_id, gig_id, amount, status, transaction_date, method)
+                VALUES (:sender_id, :receiver_id, :gig_id, :amount, 'completed', NOW(), 'crypto')";
+
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            ':sender_id' => $data['sender_id'],
+            ':receiver_id' => $data['receiver_id'],
+            ':gig_id' => $data['gig_id'],
+            ':amount' => $data['amount']
+        ]);
+    }
+
 }
